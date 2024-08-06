@@ -8,9 +8,7 @@ import sys
 import pathlib
 from sklearn.model_selection import train_test_split
 import logging
-import nltk
 
-# nltk.download('stopwords')
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
