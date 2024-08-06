@@ -37,5 +37,7 @@ jobs:
           python -m nltk.downloader wordnet
 
       - name: Run DVC pipeline
+        env:
+          DAGSHUB_ACCESS: ${{ secrets.DAGSHUB_ACCESS }}
         run: |
           dvc repro
