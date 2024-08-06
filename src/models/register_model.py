@@ -8,10 +8,12 @@ import logging
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Initialize DagsHub for MLflow ... that line do browser base authentication but ci need key base authentication
+# Initialize DagsHub for MLflow ... that 2 line do browser base authentication but ci need key base authentication
 # dagshub.init(repo_owner='Ubaidmalik9567', repo_name='mini_project_with_ops', mlflow=True)
+# mlflow.set_tracking_uri("https://dagshub.com/Ubaidmalik9567/mini_project_with_ops.mlflow")
 
-# Set up DagsHub credentials for MLflow tracking
+
+# Set up DagsHub credentials for MLflow tracking by using key base authentication
 dagshub_token = os.getenv("DAGSHUB_ACCESS")
 if not dagshub_token:
     raise EnvironmentError("DAGSHUB_ACCESS environment variable is not set")
@@ -23,7 +25,8 @@ dagshub_url = "https://dagshub.com"
 repo_owner = "Ubaidmalik9567"
 repo_name = "mini_project_with_ops"
 
-mlflow.set_tracking_uri("https://dagshub.com/Ubaidmalik9567/mini_project_with_ops.mlflow")
+mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
+
 
 def load_model_info(file_path):
     try:
