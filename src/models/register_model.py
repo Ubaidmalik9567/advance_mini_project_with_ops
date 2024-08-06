@@ -12,9 +12,9 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # dagshub.init(repo_owner='Ubaidmalik9567', repo_name='mini_project_with_ops', mlflow=True)
 
 # Set up DagsHub credentials for MLflow tracking
-dagshub_token = os.getenv("DAGSHUB_PAT")
+dagshub_token = os.getenv("DAGSHUB_ACCESS")
 if not dagshub_token:
-    raise EnvironmentError("DAGSHUB_PAT environment variable is not set")
+    raise EnvironmentError("DAGSHUB_ACCESS environment variable is not set")
 
 os.environ["MLFLOW_TRACKING_USERNAME"] = dagshub_token
 os.environ["MLFLOW_TRACKING_PASSWORD"] = dagshub_token
