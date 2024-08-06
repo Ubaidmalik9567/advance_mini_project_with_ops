@@ -19,6 +19,14 @@ jobs:
         with:
           python-version: '3.10'
 
+      - name: Cache pip dependencies # This step caches pip dependencies between workflow runs to speed up installation by storing packages in ~/.cache/pip and restoring them based on the hash of requirements.txt
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Install necessary dependencies
         run: |
           python -m pip install --upgrade pip
