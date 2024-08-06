@@ -1,28 +1,29 @@
-# ci is way where we devlop our software such way that at any stage is in deployment state
+# ci is a way where we develop our software such that it is always in a deployment state
 name: Build CI Pipeline
 
-on: push
+on:
+  push:
+    branches:
+      - main  # Ensure this matches the branch you want to trigger on
 
 jobs:
-  project-testing: # Add any job name here
-    run-on: ubuntu-latest
+  project-testing: # Name of the job or that could be any
+    runs-on: ubuntu-latest
 
     steps:
-      - name: checkout code from github
+      - name: Checkout code from GitHub
         uses: actions/checkout@v3
 
-      - name: setup python env/package
+      - name: Set up Python environment
         uses: actions/setup-python@v2
         with:
-          python-version: 3.10
+          python-version: '3.10'
 
-
-      - name: intsall necessary dependencies
+      - name: Install necessary dependencies
         run: |
-            python -m pip install --upgrade pip
-            pip install -r requirements.txt
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-      - name: run files
+      - name: Run DVC pipeline
         run: |
-            dvc repro
-
+          dvc repro
