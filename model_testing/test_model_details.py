@@ -49,6 +49,7 @@ class TestModelLoading(unittest.TestCase):
 
     def test_model_loaded_properly(self):
         self.assertIsNotNone(self.new_model)
+    
 
     ''' above code is load model: is 1st model_testing stage which load model sucessfully from model resigtery'''
     ''' above code is model signature: is 2nd model_testing stage which tell expected input which us require or give same expected output which we want'''
