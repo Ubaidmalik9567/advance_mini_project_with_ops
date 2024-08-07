@@ -118,26 +118,26 @@ def main():
             params = yaml.safe_load((file))
 
         mlflow.set_experiment("dvc-pipeline")  # if see other  mlflow code, wejust use mlflow.start_run(): now we add context manger as run so 
-        with mlflow.start_run(run_name="prediction_run") as run: # for saving model id or path we use mlflow.start_run() as run 
+        with mlflow.start_run(run_name="prediction_file-run") as run: # for saving model id or path we use mlflow.start_run() as run 
             mlflow.log_metric('accuracy', metrics_dict['accuracy'])
             mlflow.log_metric('precision', metrics_dict['precision'])
             mlflow.log_metric('recall', metrics_dict['recall'])
             mlflow.log_metric('auc', metrics_dict['auc'])
 
-        '''for param, value in params.items():
+        for param, value in params.items():
             for key, value in value.items():
-                mlflow.log_param(f'{param}_{key}', value)'''
+                mlflow.log_param(f'{param}_{key}', value)
         
         # Log metrics to MLflow
         for metric_name, metric_value in metrics_dict.items():
             mlflow.log_metric(metric_name, metric_value)
             
-            # Log model parameters to MLflow
-        if hasattr(model, 'get_params'):
-            params = model.get_params()
+        #     # Log model parameters to MLflow
+        # if hasattr(model, 'get_params'):
+        #     params = model.get_params()
             
-            for param_name, params_value in params.items():
-                mlflow.log_param(param_name, params_value)
+        #     for param_name, params_value in params.items():
+        #         mlflow.log_param(param_name, params_value)
        
         mlflow.sklearn.log_model(model, "model")
         save_model_info(run.info.run_id, "models", 'reports/model_experiment_info.json') # Save model info
