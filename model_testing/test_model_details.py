@@ -33,12 +33,20 @@ class TestModelLoading(unittest.TestCase):
         cls.new_model = mlflow.pyfunc.load_model(cls.new_model_uri)
 
     
-    @staticmethod
-    def get_latest_model_version(model_name, stage="Staging"):
-        client = mlflow.MlflowClient()
-        latest_version = client.get_latest_versions(model_name, stages=[stage])
-        return latest_version[0].version if latest_version else None
+    # @staticmethod
+    # def get_latest_model_version(model_name, stage="Staging"):
+    #     client = mlflow.MlflowClient()
+    #     latest_version = client.get_latest_versions(model_name, stages=[stage])
+    #     return latest_version[0].version if latest_version else None
     
+    @staticmethod
+    def get_latest_model_version(model_name):
+        client = mlflow.MlflowClient()
+        # Fetch all versions and sort them by version number
+        versions = client.get_latest_versions(model_name)
+        versions.sort(key=lambda v: int(v.version), reverse=True)
+        return versions[0].version if versions else None
+
     def test_model_loaded_properly(self):
         self.assertIsNotNone(self.new_model)
 
