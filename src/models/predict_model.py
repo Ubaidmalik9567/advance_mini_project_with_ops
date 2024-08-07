@@ -118,7 +118,7 @@ def main():
             params = yaml.safe_load((file))
 
         mlflow.set_experiment("dvc-pipeline")  # if see other  mlflow code, wejust use mlflow.start_run(): now we add context manger as run so 
-        with mlflow.start_run() as run: # for saving model id or path we use mlflow.start_run() as run 
+        with mlflow.start_run(run_name="prediction_run") as run: # for saving model id or path we use mlflow.start_run() as run 
             mlflow.log_metric('accuracy', metrics_dict['accuracy'])
             mlflow.log_metric('precision', metrics_dict['precision'])
             mlflow.log_metric('recall', metrics_dict['recall'])

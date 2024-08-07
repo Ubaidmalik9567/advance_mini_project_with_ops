@@ -67,7 +67,8 @@ def main():
         model_info_path = 'reports/model_experiment_info.json'
         model_info = load_model_info(model_info_path)
         model_name = "my_model"
-        register_model(model_name, model_info)
+        with mlflow.start_run(run_name="model_registry_run"):
+            register_model(model_name, model_info)
         logging.info("Model registration process completed successfully.")
     except Exception as e:
         logging.error(f"Error in main function: {e}")
