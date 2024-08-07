@@ -56,3 +56,9 @@ stages:
     deps:
     - ./reports/model_experiment_info.json
     - ./src/models/register_model.py
+  
+  promote_model:
+    cmd: python ./src/models/promote_model.py
+    deps:
+      - ./src/models/promote_model.py
+      - ./reports/model_experiment_info.json
