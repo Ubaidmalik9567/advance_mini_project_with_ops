@@ -1,11 +1,6 @@
-# that perform by tester, we just for practicing
-
 import unittest
 import mlflow
 import os
-import pandas as pd
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-import pickle
 
 class TestModelLoading(unittest.TestCase):
 
@@ -29,8 +24,12 @@ class TestModelLoading(unittest.TestCase):
         # Load the new model from MLflow model registry
         cls.new_model_name = "save_model"
         cls.new_model_version = cls.get_latest_model_version(cls.new_model_name)
-        cls.new_model_uri = f'models:/{cls.new_model_name}/{cls.new_model_version}'
-        cls.new_model = mlflow.pyfunc.load_model(cls.new_model_uri)
+        if cls.new_model_version is not None:
+            cls.new_model_uri = f'models:/{cls.new_model_name}/{cls.new_model_version}'
+            print(f"Loading model from URI: {cls.new_model_uri}")
+            cls.new_model = mlflow.pyfunc.load_model(cls.new_model_uri)
+        else:
+            raise ValueError(f"No available version for model '{cls.new_model_name}'")
 
     @staticmethod
     def get_latest_model_version(model_name, stage="Production"):
@@ -60,11 +59,6 @@ class TestModelLoading(unittest.TestCase):
 
     def test_model_loaded_properly(self):
         self.assertIsNotNone(self.new_model)
-    
-
-    ''' above code is load model: is 1st model_testing stage which load model successfully from model registry'''
-    ''' above code is model signature: is 2nd model_testing stage which tells expected input which us require or give same expected output which we want'''
-
 
 if __name__ == "__main__":
     unittest.main()
