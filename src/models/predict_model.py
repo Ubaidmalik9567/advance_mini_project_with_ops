@@ -99,57 +99,55 @@ def save_model_info(run_id, model_path, file_path) -> None: # that info use for 
 
 
 def main():
-    try:
-        current_dir = pathlib.Path(__file__)
-        home_dir = current_dir.parent.parent.parent
-
-        path = sys.argv[1]
-        save_metrics_location = home_dir.as_posix() + "/reports"
-        processed_datasets_path = home_dir.as_posix() + path + "/processed_testdata.csv"
-        trained_model_path = home_dir.as_posix() + "/models/model.pkl"
-
-        x, y = load_and_split_data(processed_datasets_path)
-        model = load_save_model(trained_model_path)
-
-        metrics_dict = evaluate_model(model, x, y)
-        save_metrics(metrics_dict, save_metrics_location)
-
-        with open("params.yaml","r") as file:
-            params = yaml.safe_load((file))
-
-        mlflow.set_experiment("dvc-pipeline")  # if see other  mlflow code, wejust use mlflow.start_run(): now we add context manger as run so 
-        with mlflow.start_run(run_name="prediction_file-run") as run: # for saving model id or path we use mlflow.start_run() as run 
-            mlflow.log_metric('accuracy', metrics_dict['accuracy'])
-            mlflow.log_metric('precision', metrics_dict['precision'])
-            mlflow.log_metric('recall', metrics_dict['recall'])
-            mlflow.log_metric('auc', metrics_dict['auc'])
-
-        for param, value in params.items():
-            for key, value in value.items():
-                mlflow.log_param(f'{param}_{key}', value)
-        
-        # Log metrics to MLflow
-        for metric_name, metric_value in metrics_dict.items():
-            mlflow.log_metric(metric_name, metric_value)
+    
+    mlflow.set_experiment("dvc-pipeline")  # if see other  mlflow code, wejust use mlflow.start_run(): now we add context manger as run so 
+    with mlflow.start_run(run_name="pred2prod_files-run") as run: # for saving model id or path we use mlflow.start_run() as run 
             
-        #     # Log model parameters to MLflow
-        # if hasattr(model, 'get_params'):
-        #     params = model.get_params()
-            
-        #     for param_name, params_value in params.items():
-        #         mlflow.log_param(param_name, params_value)
-       
-        mlflow.sklearn.log_model(model, "model")
-        save_model_info(run.info.run_id, "models", 'reports/model_experiment_info.json') # Save model info
-        
-        # Log the metrics, model info file to MLflow
-        mlflow.log_artifact('reports/metrics.json')
-        mlflow.log_artifact('reports/model_experiment_info.json')
+        try:
+            current_dir = pathlib.Path(__file__)
+            home_dir = current_dir.parent.parent.parent
 
-        logging.info("Main function completed successfully.")
-    except Exception as e:
-        logging.error(f"Error in main function: {e}")
-        raise
+            path = sys.argv[1]
+            save_metrics_location = home_dir.as_posix() + "/reports"
+            processed_datasets_path = home_dir.as_posix() + path + "/processed_testdata.csv"
+            trained_model_path = home_dir.as_posix() + "/models/model.pkl"
+
+            x, y = load_and_split_data(processed_datasets_path)
+            model = load_save_model(trained_model_path)
+
+            metrics_dict = evaluate_model(model, x, y)
+            save_metrics(metrics_dict, save_metrics_location)
+
+            with open("params.yaml","r") as file:
+                params = yaml.safe_load((file))
+
+            # that code use to log param.ymal file parameter
+            for param, value in params.items():
+                for key, value in value.items():
+                    mlflow.log_param(f'{param}_{key}', value)
+            
+            # Log metrics to MLflow
+                for metric_name, metric_value in metrics_dict.items():
+                    mlflow.log_metric(metric_name, metric_value)
+                    
+                # Log all model parameters to MLflow
+            if hasattr(model, 'get_params'):
+                params = model.get_params()
+                
+                for param_name, params_value in params.items():
+                    mlflow.log_param(param_name, params_value)
+            
+            mlflow.sklearn.log_model(model, "model")
+            save_model_info(run.info.run_id, "models", 'reports/model_experiment_info.json') # Save model info
+            
+            # Log the metrics, model info file to MLflow
+            mlflow.log_artifact('reports/metrics.json')
+            mlflow.log_artifact('reports/model_experiment_info.json')
+
+            logging.info("Main function completed successfully.")
+        except Exception as e:
+            logging.error(f"Error in main function: {e}")
+            raise
 
 if __name__ == "__main__":
     main()

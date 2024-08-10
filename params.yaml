@@ -1,9 +1,9 @@
 data_transformation:
-  split_dataset_size: 0.35
+  split_dataset_size: 0.33
   seed: 45
 
 build_features:
-  max_features: 400
+  max_features: 600
 
 train_model:
   C: 1
