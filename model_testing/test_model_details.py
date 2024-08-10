@@ -27,7 +27,7 @@ class TestModelLoading(unittest.TestCase):
         # Load the new model from MLflow model registry
         cls.new_model_name = "save_model"
         cls.new_model_version = cls.get_latest_model_version(cls.new_model_name)
-        cls.new_model_uri = f'models:/{cls.new_model_name}/{cls.new_model_version}'
+        cls.new_model_uri = f'models/{cls.new_model_name}/versions/{cls.new_model_version}'
         print(f"Loading model from URI: {cls.new_model_uri}")
         cls.new_model = mlflow.pyfunc.load_model(cls.new_model_uri)
 
