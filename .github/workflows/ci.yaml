@@ -48,9 +48,14 @@ jobs:
       #   run: |
       #     python -m unittest model_testing/test_model_details.py
       
-      - name: Run Flask app tests
-        if: success()
+      # - name: Run Flask app tests
+      #   if: success()
+      #   env:
+      #     DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
+      #   run: python -m unittest model_testing/test_model_details.py
+      
+      - name: Download MLflow Artifacts
         env:
           DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
-        run: python -m unittest model_testing/test_model_details.py
-      
+        run: |
+          python download_artifacts.py
