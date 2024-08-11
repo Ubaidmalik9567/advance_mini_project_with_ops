@@ -40,8 +40,6 @@ class TestModelLoading(unittest.TestCase):
         cls.download_path = "artifacts"
         cls.download_artifacts(cls.run_id, cls.download_path)
         cls.new_model = cls.load_model_from_artifacts(cls.download_path)
-        cls.holdout_data = pd.read_csv('data/processed/processed_testdata.csv')
-
 
         # Load the vectorizer
         vectorizer_path = os.path.join(cls.download_path, 'vectorizer.pkl')
@@ -51,12 +49,8 @@ class TestModelLoading(unittest.TestCase):
         else:
             raise FileNotFoundError("Vectorizer file not found. Ensure 'vectorizer.pkl' exists in the artifacts.")
 
-        # Load the holdout data for performance testing
-        holdout_data_path = os.path.join(cls.download_path, 'holdout_data.csv')
-        if os.path.exists(holdout_data_path):
-            cls.holdout_data = pd.read_csv(holdout_data_path)
-        else:
-            raise FileNotFoundError("Holdout data file not found. Ensure 'holdout_data.csv' exists in the artifacts.")
+        # Load the holdout data
+        cls.holdout_data = pd.read_csv('data/processed/processed_testdata.csv')
 
     @staticmethod
     def get_latest_model_version(model_name, stage="Production"):
@@ -118,7 +112,7 @@ class TestModelLoading(unittest.TestCase):
 
     def test_model_performance(self):
         # Extract features and labels from holdout test data
-        X_holdout = self.holdout_data.iloc[:, :-1]
+        X_holdout = self.holdout_data.iloc[:, 0:-1]
         y_holdout = self.holdout_data.iloc[:, -1]
 
         # Predict using the new model
