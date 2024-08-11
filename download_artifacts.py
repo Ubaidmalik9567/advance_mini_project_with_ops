@@ -3,6 +3,7 @@ import mlflow
 from mlflow.tracking import MlflowClient
 import logging
 import shutil
+import pickle
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
