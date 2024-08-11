@@ -1,61 +1,41 @@
-# updated app.py
-
-from flask import Flask, render_template,request
+from flask import Flask, render_template, request
 import mlflow
 import pickle
 import os
 import pandas as pd
-
 import numpy as np
-import pandas as pd
-import os
 import re
-import nltk
 import string
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
+import logging 
 
+# Text preprocessing functions
 def lemmatization(text):
-    """Lemmatize the text."""
     lemmatizer = WordNetLemmatizer()
     text = text.split()
     text = [lemmatizer.lemmatize(word) for word in text]
     return " ".join(text)
 
 def remove_stop_words(text):
-    """Remove stop words from the text."""
     stop_words = set(stopwords.words("english"))
-    text = [word for word in str(text).split() if word not in stop_words]
+    text = [word for word in text.split() if word not in stop_words]
     return " ".join(text)
 
 def removing_numbers(text):
-    """Remove numbers from the text."""
-    text = ''.join([char for char in text if not char.isdigit()])
-    return text
+    return ''.join([char for char in text if not char.isdigit()])
 
 def lower_case(text):
-    """Convert text to lower case."""
-    text = text.split()
-    text = [word.lower() for word in text]
-    return " ".join(text)
+    return " ".join([word.lower() for word in text.split()])
 
 def removing_punctuations(text):
-    """Remove punctuations from the text."""
-    text = re.sub('[%s]' % re.escape(string.punctuation), ' ', text)
-    text = text.replace('؛', "")
-    text = re.sub('\s+', ' ', text).strip()
-    return text
+    return re.sub('[%s]' % re.escape(string.punctuation), ' ', text).strip()
 
 def removing_urls(text):
-    """Remove URLs from the text."""
-    url_pattern = re.compile(r'https?://\S+|www\.\S+')
-    return url_pattern.sub(r'', text)
+    return re.sub(r'https?://\S+|www\.\S+', '', text)
 
 def remove_small_sentences(df):
-    """Remove sentences with less than 3 words."""
-    for i in range(len(df)):
-        if len(df.text.iloc[i].split()) < 3:
-            df.text.iloc[i] = np.nan
+    df['text'] = df['text'].apply(lambda x: np.nan if len(x.split()) < 3 else x)
 
 def normalize_text(text):
     text = lower_case(text)
@@ -64,9 +44,7 @@ def normalize_text(text):
     text = removing_punctuations(text)
     text = removing_urls(text)
     text = lemmatization(text)
-
     return text
-
 
 # Set up DagsHub credentials for MLflow tracking
 dagshub_token = os.getenv("DAGSHUB_PAT")
@@ -76,56 +54,64 @@ if not dagshub_token:
 os.environ["MLFLOW_TRACKING_USERNAME"] = dagshub_token
 os.environ["MLFLOW_TRACKING_PASSWORD"] = dagshub_token
 
-
 dagshub_url = "https://dagshub.com"
 repo_owner = "Ubaidmalik9567"
 repo_name = "mini_project_with_ops"
-
 
 # Set up MLflow tracking URI
 mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
 app = Flask(__name__)
 
-# load model from model registry
 def get_latest_model_version(model_name):
-    client = mlflow.MlflowClient()
-    latest_version = client.get_latest_versions(model_name, stages=["Production"])
-    if not latest_version:
-        latest_version = client.get_latest_versions(model_name, stages=["None"])
-    return latest_version[0].version if latest_version else None
+    try:
+        client = mlflow.MlflowClient()
+        latest_versions = client.search_model_versions(f"name='{model_name}'")
+        production_version = [v for v in latest_versions if v.current_stage == "Production"]
+        if production_version:
+            return production_version[0].version
+        else:
+            return None
+    except Exception as e:
+        logging.error(f"Error fetching latest model version: {e}")
+        raise
 
 model_name = "save_model"
 model_version = get_latest_model_version(model_name)
 
-model_uri = f'models:/{model_name}/{model_version}'
-model = mlflow.pyfunc.load_model(model_uri)
+if model_version:
+    model_uri = f"models:/{model_name}/{model_version}"
+    model = mlflow.pyfunc.load_model(model_uri)
+else:
+    raise Exception(f"No production model version found for '{model_name}'.")
 
-vectorizer = pickle.load(open('models/vectorizer.pkl','rb'))
+try:
+    with open('models/vectorizer.pkl', 'rb') as f:
+        vectorizer = pickle.load(f)
+except FileNotFoundError:
+    raise FileNotFoundError("Vectorizer file not found. Ensure 'models/vectorizer.pkl' exists.")
 
 @app.route('/')
 def home():
-    return render_template('index.html',result=None)
+    return render_template('index.html', result=None)
 
 @app.route('/predict', methods=['POST'])
 def predict():
-
     text = request.form['text']
 
-    # clean
+    # Clean and preprocess the text
     text = normalize_text(text)
 
-    # bow
+    # Transform text to features
     features = vectorizer.transform([text])
 
     # Convert sparse matrix to DataFrame
-    features_df = pd.DataFrame.sparse.from_spmatrix(features)
     features_df = pd.DataFrame(features.toarray(), columns=[str(i) for i in range(features.shape[1])])
 
-    # prediction
+    # Make prediction
     result = model.predict(features_df)
 
-    # show
+    # Show result
     return render_template('index.html', result=result[0])
 
 if __name__ == "__main__":
