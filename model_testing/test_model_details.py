@@ -40,6 +40,8 @@ class TestModelLoading(unittest.TestCase):
         cls.download_path = "artifacts"
         cls.download_artifacts(cls.run_id, cls.download_path)
         cls.new_model = cls.load_model_from_artifacts(cls.download_path)
+        cls.holdout_data = pd.read_csv('data/processed/processed_testdata.csv')
+
 
         # Load the vectorizer
         vectorizer_path = os.path.join(cls.download_path, 'vectorizer.pkl')
