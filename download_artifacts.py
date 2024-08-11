@@ -22,7 +22,7 @@ mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
 # Set the model name and stage
 model_name = "save_model"
-stage = "Production"  # Change stage if needed
+stage = "Production"  # Change stage to "Staging" or another stage if needed
 
 # Initialize MlflowClient
 client = mlflow.tracking.MlflowClient()
