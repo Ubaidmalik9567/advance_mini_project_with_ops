@@ -1,8 +1,11 @@
+# that perform by tester, we just for practicing
+
 import unittest
 import mlflow
 import os
-import pickle
+import pandas as pd
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+import pickle
 
 class TestModelLoading(unittest.TestCase):
 
@@ -29,40 +32,20 @@ class TestModelLoading(unittest.TestCase):
         cls.new_model_uri = f'models:/{cls.new_model_name}/{cls.new_model_version}'
         cls.new_model = mlflow.pyfunc.load_model(cls.new_model_uri)
 
-        # Save the model to a .pkl file
-        cls.save_model(cls.new_model, 'latest_model.pkl')
-
+    
     @staticmethod
     def get_latest_model_version(model_name, stage="Staging"):
         client = mlflow.MlflowClient()
-        latest_versions = client.get_latest_versions(model_name, stages=[stage])
-        if not latest_versions:
-            # If no versions in "Staging", fallback to "None"
-            latest_versions = client.get_latest_versions(model_name, stages=["None"])
-        
-        if latest_versions:
-            latest_version = latest_versions[0]
-            version = latest_version.version
-            run_id = latest_version.run_id  # Get the run_id of the model version
-            model_uri = f"models/{model_name}/versions/{version}"
-            
-            # Print model details
-            print(f"Model Name: {model_name}")
-            print(f"Latest Model Version: {version}")
-            print(f"Model URI: {model_uri}")
-            print(f"Run ID: {run_id}")  # Print the run_id
-            
-            return version
-        else:
-            print(f"No versions found for model: {model_name}")
-            return None
-
-    @staticmethod
-    def save_model(model, filename):
-        """Save the model to a .pkl file."""
-        with open(filename, 'wb') as file:
-            pickle.dump(model, file)
-        print(f"Model saved to {filename}")
+        latest_version = client.get_latest_versions(model_name, stages=[stage])
+        return latest_version[0].version if latest_version else None
+    
+    # @staticmethod
+    # def get_latest_model_version(model_name):
+    #     client = mlflow.MlflowClient()
+    #     # Fetch all versions and sort them by version number
+    #     versions = client.get_latest_versions(model_name)
+    #     versions.sort(key=lambda v: int(v.version), reverse=True)
+    #     return versions[0].version if versions else None
 
     def test_model_loaded_properly(self):
         self.assertIsNotNone(self.new_model)
