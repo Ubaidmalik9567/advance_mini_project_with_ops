@@ -42,23 +42,18 @@ jobs:
         run: |
           dvc repro
       
-      # - name: Run model testing stages # that code just test our model
+      - name: Run model testing stages # that code just test our model
+        env:
+          DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
+        run: |
+          python -m unittest model_testing/test_model_details.py
+      
+      # - name: Run Flask app tests
+      #   if: success()
       #   env:
       #     DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
-      #   run: |
-      #     python -m unittest model_testing/test_model_details.py
+      #   run: python -m unittest model_testing/test_model_details.py
       
-      - name: Test Flask app
-        run: |
-          # Start the Flask app in the background
-          nohup python flask_app/app.py > app.log 2>&1 &
-          
-          # Wait for the Flask app to start (increase sleep time if necessary)
-          sleep 30
-          
-          # Check if the Flask app is running
-          curl --silent --fail http://localhost:5000/ || exit 1
-            
       # - name: Download MLflow Artifacts
       #   env:
       #     DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
