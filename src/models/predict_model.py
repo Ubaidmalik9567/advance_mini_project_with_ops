@@ -110,7 +110,7 @@ def main():
             save_metrics_location = home_dir.as_posix() + "/reports"
             processed_datasets_path = home_dir.as_posix() + path + "/processed_testdata.csv"
             trained_model_path = home_dir.as_posix() + "/models/model.pkl"
-            raw_csv_path = home_dir.as_posix() + "/data/raw/raw.csv"
+            raw_csv_path = home_dir.as_posix() + "/data/raw/processed_testdata.csv"
 
             # Perform random sampling
             sampled_data = random_sample_csv(raw_csv_path, num_samples=200)
