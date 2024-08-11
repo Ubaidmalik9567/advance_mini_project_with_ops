@@ -11,12 +11,6 @@ import mlflow
 import os
 import dagshub
 
-
-# Initialize DagsHub for MLflow ... that 2 line do browser base authentication but ci need key base authentication
-# dagshub.init(repo_owner='Ubaidmalik9567', repo_name='mini_project_with_ops', mlflow=True)
-# mlflow.set_tracking_uri("https://dagshub.com/Ubaidmalik9567/mini_project_with_ops.mlflow")
-
-
 # Set up DagsHub credentials for MLflow tracking by using key base authentication
 dagshub_token = os.getenv("DAGSHUB_PAT")
 if not dagshub_token:
@@ -97,12 +91,17 @@ def save_model_info(run_id, model_path, file_path) -> None: # that info use for 
     with open(file_path, 'w') as file:
         json.dump(model_info, file, indent=4)
 
+def random_sample_csv(csv_path, num_samples):
+    df = pd.read_csv(csv_path)
+    # Perform random sampling
+    sampled_df = df.sample(n=num_samples, random_state=1)
+    return sampled_df
 
 def main():
     
-    mlflow.set_experiment("dvc-pipeline")  # if see other  mlflow code, wejust use mlflow.start_run(): now we add context manger as run so 
-    with mlflow.start_run(run_name="pred2prod_files-run") as run: # for saving model id or path we use mlflow.start_run() as run 
-            
+    mlflow.set_experiment("dvc-pipeline")  # Set up MLflow experiment
+    with mlflow.start_run(run_name="pred2prod_files-run") as run:  # Start MLflow run
+        
         try:
             current_dir = pathlib.Path(__file__)
             home_dir = current_dir.parent.parent.parent
@@ -111,6 +110,13 @@ def main():
             save_metrics_location = home_dir.as_posix() + "/reports"
             processed_datasets_path = home_dir.as_posix() + path + "/processed_testdata.csv"
             trained_model_path = home_dir.as_posix() + "/models/model.pkl"
+            raw_csv_path = home_dir.as_posix() + "/data/raw/raw.csv"
+
+            # Perform random sampling
+            sampled_data = random_sample_csv(raw_csv_path, num_samples=200)
+            sampled_data_path = home_dir.as_posix() + "/reports/sampled_data.csv"
+            sampled_data.to_csv(sampled_data_path, index=False)
+            mlflow.log_artifact(sampled_data_path)
 
             x, y = load_and_split_data(processed_datasets_path)
             model = load_save_model(trained_model_path)
@@ -118,29 +124,28 @@ def main():
             metrics_dict = evaluate_model(model, x, y)
             save_metrics(metrics_dict, save_metrics_location)
 
-            with open("params.yaml","r") as file:
-                params = yaml.safe_load((file))
+            with open("params.yaml", "r") as file:
+                params = yaml.safe_load(file)
 
-            # that code use to log param.ymal file parameter
+            # Log parameters from params.yaml
             for param, value in params.items():
                 for key, value in value.items():
                     mlflow.log_param(f'{param}_{key}', value)
             
             # Log metrics to MLflow
-                for metric_name, metric_value in metrics_dict.items():
-                    mlflow.log_metric(metric_name, metric_value)
+            for metric_name, metric_value in metrics_dict.items():
+                mlflow.log_metric(metric_name, metric_value)
                     
-                # Log all model parameters to MLflow
+            # Log all model parameters to MLflow
             if hasattr(model, 'get_params'):
-                params = model.get_params()
-                
-                for param_name, params_value in params.items():
-                    mlflow.log_param(param_name, params_value)
+                model_params = model.get_params()
+                for param_name, param_value in model_params.items():
+                    mlflow.log_param(param_name, param_value)
             
             mlflow.sklearn.log_model(model, "model")
             mlflow.log_artifact("models/vectorizer.pkl")
 
-            save_model_info(run.info.run_id, "models", 'reports/model_experiment_info.json') # Save model info
+            save_model_info(run.info.run_id, "models", 'reports/model_experiment_info.json')  # Save model info
             
             # Log the metrics, model info file to MLflow
             mlflow.log_artifact('reports/metrics.json')
@@ -153,4 +158,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
