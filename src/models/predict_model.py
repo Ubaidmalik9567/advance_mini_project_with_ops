@@ -110,10 +110,10 @@ def main():
             save_metrics_location = home_dir.as_posix() + "/reports"
             processed_datasets_path = home_dir.as_posix() + path + "/processed_testdata.csv"
             trained_model_path = home_dir.as_posix() + "/models/model.pkl"
-            raw_csv_path = home_dir.as_posix() + "/data/raw/processed_testdata.csv"
+            forsample_csv_path = processed_datasets_path
 
             # Perform random sampling
-            sampled_data = random_sample_csv(raw_csv_path, num_samples=200)
+            sampled_data = random_sample_csv(forsample_csv_path, num_samples=200)
             sampled_data_path = home_dir.as_posix() + "/reports/sampled_data.csv"
             sampled_data.to_csv(sampled_data_path, index=False)
             mlflow.log_artifact(sampled_data_path)
