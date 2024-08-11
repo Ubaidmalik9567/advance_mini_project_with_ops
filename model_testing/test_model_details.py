@@ -49,12 +49,12 @@ class TestModelLoading(unittest.TestCase):
         else:
             raise FileNotFoundError("Vectorizer file not found. Ensure 'vectorizer.pkl' exists in the artifacts.")
 
-        # Load the holdout data for performance testing
-        holdout_data_path = os.path.join(cls.download_path, 'holdout_data.csv')
+        # Load the sampled_data data for performance testing
+        holdout_data_path = os.path.join(cls.download_path, 'sampled_data.csv')
         if os.path.exists(holdout_data_path):
             cls.holdout_data = pd.read_csv(holdout_data_path)
         else:
-            raise FileNotFoundError("Holdout data file not found. Ensure 'holdout_data.csv' exists in the artifacts.")
+            raise FileNotFoundError("sampled_data data file not found. Ensure 'sampled_data.csv' exists in the artifacts.")
 
         # Load the sampled data
         sampled_data_path = os.path.join(cls.download_path, 'sampled_data.csv')
