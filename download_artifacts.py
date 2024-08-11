@@ -23,12 +23,12 @@ mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
 # Set the model name
 model_name = "save_model"
-stage = "Staging"
+stage = "Production"  # Change stage to "Production" to get the production model
 
 # Initialize MlflowClient
 client = MlflowClient()
 
-# Get the latest model version in the specified stage (for compatibility with the new API, assuming versions are handled differently)
+# Get the latest model version in the specified stage
 model_versions = client.search_model_versions(f"name='{model_name}'")
 latest_version_info = next(
     (v for v in model_versions if v.current_stage == stage), None
