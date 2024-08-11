@@ -2,6 +2,7 @@ import os
 import mlflow
 from mlflow.tracking import MlflowClient
 import logging
+import shutil
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -21,7 +22,7 @@ repo_name = "mini_project_with_ops"
 # Set up MLflow tracking URI
 mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
-# Set the model name
+# Set the model name and stage
 model_name = "save_model"
 stage = "Production"  # Change stage to "Production" to get the production model
 
@@ -48,3 +49,15 @@ os.makedirs(download_path, exist_ok=True)
 # Download artifacts
 client.download_artifacts(run_id, "", download_path)
 logging.info(f"Artifacts downloaded to: {download_path}")
+
+# Locate and load the model.pkl file
+model_pkl_path = os.path.join(download_path, 'model.pkl')
+
+if os.path.isfile(model_pkl_path):
+    logging.info(f"Found model.pkl at: {model_pkl_path}")
+    # Load the model.pkl
+    with open(model_pkl_path, 'rb') as model_file:
+        model = pickle.load(model_file)
+    logging.info("Model loaded successfully.")
+else:
+    logging.error("model.pkl not found in downloaded artifacts.")
