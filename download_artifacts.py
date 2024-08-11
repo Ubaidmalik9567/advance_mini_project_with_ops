@@ -1,6 +1,8 @@
 import os
 import mlflow
+from mlflow.tracking import MlflowClient
 import logging
+import pickle
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -22,10 +24,10 @@ mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
 # Set the model name and stage
 model_name = "save_model"
-stage = "Production"  # Change stage if needed
+stage = "Production"  # Change stage to "Production" to get the production model
 
 # Initialize MlflowClient
-client = mlflow.tracking.MlflowClient()
+client = MlflowClient()
 
 # Get the latest model version in the specified stage
 model_versions = client.search_model_versions(f"name='{model_name}'")
@@ -36,16 +38,31 @@ latest_version_info = next(
 if not latest_version_info:
     raise Exception(f"No model found in the '{stage}' stage.")
 
-# Construct the model URI
-model_version = latest_version_info.version
-model_uri = f'models:/{model_name}/{model_version}'
+# Extract the run ID
+run_id = latest_version_info.run_id
+logging.info(f"Downloading artifacts for run ID: {run_id}")
 
-# Load the model
-try:
-    model = mlflow.pyfunc.load_model(model_uri)
-    logging.info(f"Model loaded successfully from URI: {model_uri}")
-    # Optionally, you can print model details or perform further actions
-    print(f"Model loaded successfully from URI: {model_uri}")
-except Exception as e:
-    logging.error(f"Error loading model: {e}")
-    raise
+# Specify the download path for artifacts
+download_path = "artifacts"
+os.makedirs(download_path, exist_ok=True)
+
+# Download artifacts
+client.download_artifacts(run_id, "", download_path)
+logging.info(f"Artifacts downloaded to: {download_path}")
+
+# List the contents of the artifacts directory
+for root, dirs, files in os.walk(download_path):
+    for file in files:
+        logging.info(f"Found file: {file}")
+
+# Locate and load the model.pkl file
+model_pkl_path = os.path.join(download_path, 'model.pkl')
+
+if os.path.isfile(model_pkl_path):
+    logging.info(f"Found model.pkl at: {model_pkl_path}")
+    # Load the model.pkl
+    with open(model_pkl_path, 'rb') as model_file:
+        model = pickle.load(model_file)
+    logging.info("Model loaded successfully.")
+else:
+    logging.error("model.pkl not found in downloaded artifacts.")
