@@ -5,7 +5,7 @@ import mlflow
 import pickle
 import os
 import pandas as pd
-
+from mlflow import MlflowClient
 import numpy as np
 import pandas as pd
 import os
@@ -89,17 +89,20 @@ app = Flask(__name__)
 
 # load model from model registry
 def get_latest_model_version(model_name):
-    client = mlflow.MlflowClient()
-    latest_version = client.get_latest_versions(model_name, stages=["Production"])
-    if not latest_version:
-        latest_version = client.get_latest_versions(model_name, stages=["None"])
-    return latest_version[0].version if latest_version else None
+    client = MlflowClient()
+    # Get all registered models and select the latest
+    model_versions = client.search_model_versions(f"name='{model_name}'")
+    if not model_versions:
+        return None
+    latest_version = max(model_versions, key=lambda mv: int(mv.version))
+    return latest_version.version
 
 model_name = "save_model"
 model_version = get_latest_model_version(model_name)
 
 model_uri = f'models:/{model_name}/{model_version}'
 model = mlflow.pyfunc.load_model(model_uri)
+
 
 vectorizer = pickle.load(open('models/vectorizer.pkl','rb'))
 
