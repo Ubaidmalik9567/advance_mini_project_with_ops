@@ -8,7 +8,10 @@ import re
 import string
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
-import logging 
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Text preprocessing functions
 def lemmatization(text):
@@ -76,20 +79,37 @@ def get_latest_model_version(model_name):
         logging.error(f"Error fetching latest model version: {e}")
         raise
 
-model_name = "save_model"
-model_version = get_latest_model_version(model_name)
+def load_model_and_vectorizer():
+    model_name = "save_model"
+    model_version = get_latest_model_version(model_name)
+    
+    if model_version:
+        model_uri = f"models:/{model_name}/{model_version}"
+        try:
+            model = mlflow.pyfunc.load_model(model_uri)
+            logging.info(f"Model loaded successfully from {model_uri}")
+        except Exception as e:
+            logging.error(f"Error loading model: {e}")
+            raise
+    else:
+        raise Exception(f"No production model version found for '{model_name}'.")
 
-if model_version:
-    model_uri = f"models:/{model_name}/{model_version}"
-    model = mlflow.pyfunc.load_model(model_uri)
-else:
-    raise Exception(f"No production model version found for '{model_name}'.")
+    # Load the vectorizer
+    vectorizer_path = 'models/vectorizer.pkl'
+    try:
+        with open(vectorizer_path, 'rb') as f:
+            vectorizer = pickle.load(f)
+            logging.info(f"Vectorizer loaded successfully from {vectorizer_path}")
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Vectorizer file not found at '{vectorizer_path}'")
+    except Exception as e:
+        logging.error(f"Error loading vectorizer: {e}")
+        raise
 
-try:
-    with open('models/vectorizer.pkl', 'rb') as f:
-        vectorizer = pickle.load(f)
-except FileNotFoundError:
-    raise FileNotFoundError("Vectorizer file not found. Ensure 'models/vectorizer.pkl' exists.")
+    return model, vectorizer
+
+# Load model and vectorizer at startup
+model, vectorizer = load_model_and_vectorizer()
 
 @app.route('/')
 def home():
