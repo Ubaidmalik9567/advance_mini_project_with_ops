@@ -56,6 +56,13 @@ class TestModelLoading(unittest.TestCase):
         else:
             raise FileNotFoundError("Holdout data file not found. Ensure 'holdout_data.csv' exists in the artifacts.")
 
+        # Load the sampled data
+        sampled_data_path = os.path.join(cls.download_path, 'sampled_data.csv')
+        if os.path.exists(sampled_data_path):
+            cls.sampled_data = pd.read_csv(sampled_data_path)
+        else:
+            raise FileNotFoundError("Sampled data file not found. Ensure 'sampled_data.csv' exists in the artifacts.")
+
     @staticmethod
     def get_latest_model_version(model_name, stage="Production"):
         client = mlflow.MlflowClient()
@@ -115,18 +122,18 @@ class TestModelLoading(unittest.TestCase):
         self.assertEqual(len(prediction.shape), 1)  # Assuming a single output column for binary classification
 
     def test_model_performance(self):
-        # Extract features and labels from holdout test data
-        X_holdout = self.holdout_data.iloc[:, :-1]
-        y_holdout = self.holdout_data.iloc[:, -1]
+        # Use the sampled data for performance evaluation
+        X_sampled = self.sampled_data.iloc[:, :-1]
+        y_sampled = self.sampled_data.iloc[:, -1]
 
         # Predict using the new model
-        y_pred_new = self.new_model.predict(X_holdout)
+        y_pred_new = self.new_model.predict(X_sampled)
 
         # Calculate performance metrics for the new model
-        accuracy_new = accuracy_score(y_holdout, y_pred_new)
-        precision_new = precision_score(y_holdout, y_pred_new)
-        recall_new = recall_score(y_holdout, y_pred_new)
-        f1_new = f1_score(y_holdout, y_pred_new)
+        accuracy_new = accuracy_score(y_sampled, y_pred_new)
+        precision_new = precision_score(y_sampled, y_pred_new)
+        recall_new = recall_score(y_sampled, y_pred_new)
+        f1_new = f1_score(y_sampled, y_pred_new)
 
         # Define expected thresholds for the performance metrics
         expected_accuracy = 0.40
