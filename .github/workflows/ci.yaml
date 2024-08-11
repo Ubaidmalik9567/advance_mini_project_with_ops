@@ -48,12 +48,17 @@ jobs:
       #   run: |
       #     python -m unittest model_testing/test_model_details.py
       
-      - name: Run Flask app 
-        if: success()
-        env:
-          DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
-        run: python flask_app/app.py
-      
+      - name: Test Flask app
+        run: |
+          # Start the Flask app in the background
+          nohup python flask_app/app.py > app.log 2>&1 &
+          
+          # Wait for the Flask app to start (increase sleep time if necessary)
+          sleep 30
+          
+          # Check if the Flask app is running
+          curl --silent --fail http://localhost:5000/ || exit 1
+            
       # - name: Download MLflow Artifacts
       #   env:
       #     DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
