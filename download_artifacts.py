@@ -41,6 +41,11 @@ def download_artifacts(run_id, download_path):
     client.download_artifacts(run_id, "", download_path)
     logging.info(f"Artifacts downloaded to: {download_path}")
 
+    # Log all files found in the download path
+    for root, dirs, files in os.walk(download_path):
+        for file in files:
+            logging.info(f"Found file: {os.path.join(root, file)}")
+
 def load_model_from_artifacts(download_path):
     model_pkl_path = None
     for root, dirs, files in os.walk(download_path):
