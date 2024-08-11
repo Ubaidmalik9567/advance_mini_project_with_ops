@@ -41,11 +41,12 @@ class TestModelLoading(unittest.TestCase):
         cls.new_model = cls.load_model_from_artifacts(cls.download_path)
 
         # Load the vectorizer
-        try:
-            with open('models/vectorizer.pkl', 'rb') as f:
+        vectorizer_path = os.path.join(cls.download_path, 'vectorizer.pkl')
+        if os.path.exists(vectorizer_path):
+            with open(vectorizer_path, 'rb') as f:
                 cls.vectorizer = pickle.load(f)
-        except FileNotFoundError:
-            raise FileNotFoundError("Vectorizer file not found. Ensure 'models/vectorizer.pkl' exists.")
+        else:
+            raise FileNotFoundError("Vectorizer file not found. Ensure 'vectorizer.pkl' exists in the artifacts.")
 
     @staticmethod
     def get_latest_model_version(model_name, stage="Production"):

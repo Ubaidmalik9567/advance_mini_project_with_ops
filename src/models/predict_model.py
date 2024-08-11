@@ -138,6 +138,8 @@ def main():
                     mlflow.log_param(param_name, params_value)
             
             mlflow.sklearn.log_model(model, "model")
+            mlflow.log_artifact("models/vectorizer.pkl")
+
             save_model_info(run.info.run_id, "models", 'reports/model_experiment_info.json') # Save model info
             
             # Log the metrics, model info file to MLflow
