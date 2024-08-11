@@ -1,5 +1,6 @@
 import os
 import mlflow
+from mlflow.tracking import MlflowClient
 import logging
 
 # Configure logging
@@ -20,12 +21,12 @@ repo_name = "mini_project_with_ops"
 # Set up MLflow tracking URI
 mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
-# Set the model name and stage
+# Set the model name
 model_name = "save_model"
-stage = "Production"  # Change stage to "Staging" or another stage if needed
+stage = "Production"  # Change stage to "Production" to get the production model
 
 # Initialize MlflowClient
-client = mlflow.tracking.MlflowClient()
+client = MlflowClient()
 
 # Get the latest model version in the specified stage
 model_versions = client.search_model_versions(f"name='{model_name}'")
@@ -36,15 +37,14 @@ latest_version_info = next(
 if not latest_version_info:
     raise Exception(f"No model found in the '{stage}' stage.")
 
-# Construct the model URI
-model_version = latest_version_info.version
-model_uri = f'models:/{model_name}/{model_version}'
+# Extract the run ID
+run_id = latest_version_info.run_id
+logging.info(f"Downloading artifacts for run ID: {run_id}")
 
-# Load the model
-try:
-    model = mlflow.pyfunc.load_model(model_uri)
-    logging.info(f"Model loaded successfully from URI: {model_uri}")
-    print(f"Model loaded successfully from URI: {model_uri}")
-except Exception as e:
-    logging.error(f"Error loading model: {e}")
-    raise
+# Specify the download path for artifacts
+download_path = "artifacts"
+os.makedirs(download_path, exist_ok=True)
+
+# Download artifacts
+client.download_artifacts(run_id, "", download_path)
+logging.info(f"Artifacts downloaded to: {download_path}")
