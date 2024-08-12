@@ -9,6 +9,8 @@ import string
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import logging
+import nltk
+nltk.download('stopwords')
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
