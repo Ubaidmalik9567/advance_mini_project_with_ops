@@ -52,7 +52,7 @@ jobs:
         if: success() # that check if just previous command condition run sucessfully then run this command 
         env:
           DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
-        run: python -m unittest src/models/promote_model.py
+        run: python src/models/promote_model.py
       
       # - name: Download MLflow Artifacts
       #   env:
