@@ -123,26 +123,27 @@ model, vectorizer = load_model_and_vectorizer()
 
 @app.route('/')
 def home():
-    return render_template('index.html', result=None)
+    return render_template('index.html',result=None)
 
 @app.route('/predict', methods=['POST'])
 def predict():
+
     text = request.form['text']
 
-    # Clean and preprocess the text
+    # clean
     text = normalize_text(text)
 
-    # Transform text to features
+    # bow
     features = vectorizer.transform([text])
 
     # Convert sparse matrix to DataFrame
+    features_df = pd.DataFrame.sparse.from_spmatrix(features)
     features_df = pd.DataFrame(features.toarray(), columns=[str(i) for i in range(features.shape[1])])
 
-    # Make prediction
+    # prediction
     result = model.predict(features_df)
 
-    # Show result
+    # show
     return render_template('index.html', result=result[0])
 
-if __name__ == "__main__":
-    app.run(debug=True)
+if __name__ == "__main__":    app.run(debug=True)
