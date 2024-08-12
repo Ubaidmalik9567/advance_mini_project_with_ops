@@ -67,7 +67,7 @@ def evaluate_model(clf, X_test: np.ndarray, y_test: np.ndarray) -> dict:
             'accuracy': accuracy,
             'precision': precision,
             'recall': recall,
-            'roc_auc_score': auc
+            'auc': auc
         }
         logging.info("Model evaluation completed successfully.")
         return metrics_dict

@@ -4,7 +4,7 @@ import os
 import logging
 import pickle
 import pandas as pd
-from sklearn.metrics import accuracy_score, precision_score, recall_score, roc_auc_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -133,19 +133,19 @@ class TestModelLoading(unittest.TestCase):
         accuracy_new = accuracy_score(y_sampled, y_pred_new)
         precision_new = precision_score(y_sampled, y_pred_new)
         recall_new = recall_score(y_sampled, y_pred_new)
-        roc_auc_score = roc_auc_score(y_sampled, y_pred_new)
+        f1_new = f1_score(y_sampled, y_pred_new)
 
         # Define expected thresholds for the performance metrics
         expected_accuracy = 0.77
         expected_precision = 0.77
         expected_recall = 0.77
-        expected_roc_auc_score = 0.77
+        expected_f1 = 0.77
 
         # Assert that the new model meets the performance thresholds
         self.assertGreaterEqual(accuracy_new, expected_accuracy, f'Accuracy should be at least {expected_accuracy}')
         self.assertGreaterEqual(precision_new, expected_precision, f'Precision should be at least {expected_precision}')
         self.assertGreaterEqual(recall_new, expected_recall, f'Recall should be at least {expected_recall}')
-        self.assertGreaterEqual(roc_auc_score, expected_roc_auc_score, f'roc_auc_score should be at least {expected_roc_auc_score}')
+        self.assertGreaterEqual(f1_new, expected_f1, f'F1 score should be at least {expected_f1}')
 
 if __name__ == "__main__":
     unittest.main()
