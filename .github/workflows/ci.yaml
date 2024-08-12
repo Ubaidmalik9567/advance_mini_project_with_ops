@@ -41,7 +41,7 @@ jobs:
           DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
         run: |
           dvc repro
-          dvc push
+    
       
       - name: Run model testing stages # that code just test our model
         env:
