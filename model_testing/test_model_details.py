@@ -30,7 +30,7 @@ class TestModelLoading(unittest.TestCase):
 
         # Set the model name and stage
         cls.model_name = "save_model"
-        cls.stage = "Production"  # Change stage if needed
+        cls.stage = "Staging"  # Change stage if needed
 
         # Get the latest model version
         cls.run_id = cls.get_latest_model_version(cls.model_name, cls.stage)
