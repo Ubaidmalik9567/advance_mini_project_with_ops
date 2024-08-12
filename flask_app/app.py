@@ -37,9 +37,6 @@ def removing_punctuations(text):
 def removing_urls(text):
     return re.sub(r'https?://\S+|www\.\S+', '', text)
 
-def remove_small_sentences(df):
-    df['text'] = df['text'].apply(lambda x: np.nan if len(x.split()) < 3 else x)
-
 def normalize_text(text):
     text = lower_case(text)
     text = remove_stop_words(text)
@@ -66,45 +63,56 @@ mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
 app = Flask(__name__)
 
-def get_latest_model_version(model_name):
-    try:
-        client = mlflow.MlflowClient()
-        latest_versions = client.search_model_versions(f"name='{model_name}'")
-        production_version = [v for v in latest_versions if v.current_stage == "Production"]
-        if production_version:
-            return production_version[0].version
-        else:
-            return None
-    except Exception as e:
-        logging.error(f"Error fetching latest model version: {e}")
-        raise
+def get_latest_model_run_id(model_name, stage="Production"):
+    client = mlflow.MlflowClient()
+    model_versions = client.search_model_versions(f"name='{model_name}'")
+    latest_version_info = next((v for v in model_versions if v.current_stage == stage), None)
+    return latest_version_info.run_id if latest_version_info else None
+
+def download_artifacts(run_id, download_path):
+    client = mlflow.MlflowClient()
+    os.makedirs(download_path, exist_ok=True)
+    client.download_artifacts(run_id, "", download_path)
+    logging.info(f"Artifacts downloaded to: {download_path}")
+
+    # Log all files found in the download path
+    for root, dirs, files in os.walk(download_path):
+        for file in files:
+            logging.info(f"Found file: {os.path.join(root, file)}")
 
 def load_model_and_vectorizer():
     model_name = "save_model"
-    model_version = get_latest_model_version(model_name)
-    
-    if model_version:
-        model_uri = f"models:/{model_name}/{model_version}"
-        try:
-            model = mlflow.pyfunc.load_model(model_uri)
-            logging.info(f"Model loaded successfully from {model_uri}")
-        except Exception as e:
-            logging.error(f"Error loading model: {e}")
-            raise
+    stage = "Production"
+    run_id = get_latest_model_run_id(model_name, stage)
+    if not run_id:
+        raise Exception(f"No model found in the '{stage}' stage.")
+
+    download_path = "artifacts"
+    download_artifacts(run_id, download_path)
+
+    # Load the model
+    model_pkl_path = None
+    for root, dirs, files in os.walk(download_path):
+        if 'model.pkl' in files:
+            model_pkl_path = os.path.join(root, 'model.pkl')
+            break
+
+    if model_pkl_path:
+        logging.info(f"Found model.pkl at: {model_pkl_path}")
+        with open(model_pkl_path, 'rb') as model_file:
+            model = pickle.load(model_file)
+        logging.info("Model loaded successfully.")
     else:
-        raise Exception(f"No production model version found for '{model_name}'.")
+        raise FileNotFoundError("model.pkl not found in downloaded artifacts.")
 
     # Load the vectorizer
-    vectorizer_path = 'models/vectorizer.pkl'
-    try:
+    vectorizer_path = os.path.join(download_path, 'vectorizer.pkl')
+    if os.path.exists(vectorizer_path):
         with open(vectorizer_path, 'rb') as f:
             vectorizer = pickle.load(f)
-            logging.info(f"Vectorizer loaded successfully from {vectorizer_path}")
-    except FileNotFoundError:
-        raise FileNotFoundError(f"Vectorizer file not found at '{vectorizer_path}'")
-    except Exception as e:
-        logging.error(f"Error loading vectorizer: {e}")
-        raise
+        logging.info(f"Vectorizer loaded successfully from {vectorizer_path}")
+    else:
+        raise FileNotFoundError("Vectorizer file not found. Ensure 'vectorizer.pkl' exists in the artifacts.")
 
     return model, vectorizer
 
@@ -135,4 +143,4 @@ def predict():
     return render_template('index.html', result=result[0])
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0")
+    app.run(debug=True)
