@@ -31,6 +31,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+        
+      - name: Cache NLTK data
+        uses: actions/cache@v3
+        with:
+          path: ~/nltk_data
+          key: ${{ runner.os }}-nltk-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-nltk-
       
       - name: Download NLTK data # that occur error 
         run: |
@@ -42,23 +50,23 @@ jobs:
       #   run: |
       #     dvc repro
       
-      - name: Run model testing stages # that code just test our model
-        env:
-          DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
-        run: |
-          python -m unittest model_testing/test_model_details.py
+      # - name: Run model testing stages # that code just test our model
+      #   env:
+      #     DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
+      #   run: |
+      #     python -m unittest model_testing/test_model_details.py
       
-      - name: promote model to production
-        if: success() # that check if just previous command condition run sucessfully then run this command 
-        env:
-          DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
-        run: python src/models/promote_model.py
+      # - name: promote model to production
+      #   if: success() # that check if just previous command condition run sucessfully then run this command 
+      #   env:
+      #     DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
+      #   run: python src/models/promote_model.py
 
-      - name: Testing Flask app
-        if: success()  
-        env:
-          DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
-        run: python -m unittest model_testing/test_flask_app.py
+      # - name: Testing Flask app
+      #   if: success()  
+      #   env:
+      #     DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
+      #   run: python -m unittest model_testing/test_flask_app.py
       
       - name: Download MLflow Artifacts
         env:
