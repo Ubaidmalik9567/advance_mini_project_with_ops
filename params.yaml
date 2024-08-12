@@ -3,7 +3,7 @@ data_transformation:
   seed: 45
 
 build_features:
-  max_features: 1300
+  max_features: 1700
 
 train_model:
   C: 1
