@@ -137,7 +137,7 @@ class TestModelLoading(unittest.TestCase):
 
         # Define expected thresholds for the performance metrics
         expected_accuracy = 0.77
-        expected_precision = 0.77
+        expected_precision = 0.80
         expected_recall = 0.77
         expected_f1 = 0.77
 
