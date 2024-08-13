@@ -1,6 +1,5 @@
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
-from pydantic import BaseModel
 import mlflow
 import pickle
 import os
@@ -80,11 +79,6 @@ def download_artifacts(run_id, download_path):
     os.makedirs(download_path, exist_ok=True)
     client.download_artifacts(run_id, "", download_path)
     logging.info(f"Artifacts downloaded to: {download_path}")
-
-    # Log all files found in the download path
-    for root, dirs, files in os.walk(download_path):
-        for file in files:
-            logging.info(f"Found file: {os.path.join(root, file)}")
 
 def load_model_and_vectorizer():
     model_name = "save_model"
