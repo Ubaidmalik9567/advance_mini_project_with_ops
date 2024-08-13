@@ -32,7 +32,7 @@ def get_latest_model_version(model_name, stage):
     if not latest_version_info:
         raise Exception(f"No model found in the '{stage}' stage.")
 
-    return latest_version_info.run_id
+    return latest_version_info
 
 def list_artifacts(run_id):
     client = MlflowClient()
@@ -48,8 +48,17 @@ def main():
     stage = "Production"
 
     try:
-        run_id = get_latest_model_version(model_name, stage)
+        # Get the latest model version information
+        latest_version_info = get_latest_model_version(model_name, stage)
+        run_id = latest_version_info.run_id
+        model_version = latest_version_info.version
+        
+        logging.info(f"Run ID: {run_id}")
+        logging.info(f"Model Version: {model_version}")
+
+        # List artifacts
         list_artifacts(run_id)
+        
     except Exception as e:
         logging.error(f"An error occurred: {e}")
 
