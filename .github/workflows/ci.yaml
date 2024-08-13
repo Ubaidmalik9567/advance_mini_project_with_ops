@@ -61,17 +61,17 @@ jobs:
       #     DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
       #   run: python -m unittest model_testing/test_flask_app.py
       
-      # - name: Download MLflow Artifacts
-      #   env:
-      #     DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
-      #   run: |
-      #     python download_artifacts.py
-      
-      - name: Run Flask app
-        if: success()
+      - name: Download MLflow Artifacts
         env:
-          DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}  # Set environment variable for Flask app
+          DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
         run: |
-          python flask_app/app.py
+          python download_artifacts.py
+
+      # - name: Run Flask app
+      #   if: success()
+      #   env:
+      #     DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}  # Set environment variable for Flask app
+      #   run: |
+      #     python flask_app/app.py
 
     

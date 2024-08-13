@@ -2,7 +2,6 @@ import os
 import mlflow
 from mlflow.tracking import MlflowClient
 import logging
-import pickle
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -35,35 +34,14 @@ def get_latest_model_version(model_name, stage):
 
     return latest_version_info.run_id
 
-def download_artifacts(run_id, download_path):
+def list_artifacts(run_id):
     client = MlflowClient()
-    os.makedirs(download_path, exist_ok=True)
-    client.download_artifacts(run_id, "", download_path)
-    logging.info(f"Artifacts downloaded to: {download_path}")
+    artifacts_info = client.list_artifacts(run_id)
+    
+    # Print directory structure
+    for artifact in artifacts_info:
+        logging.info(f"Artifact: {artifact.path}")
 
-    # Log all files found in the download path
-    for root, dirs, files in os.walk(download_path):
-        for file in files:
-            logging.info(f"Found file: {os.path.join(root, file)}")
-
-def load_model_from_artifacts(download_path):
-    model_pkl_path = None
-    for root, dirs, files in os.walk(download_path):
-        if 'model.pkl' in files:
-            model_pkl_path = os.path.join(root, 'model.pkl')
-            break
-
-    if model_pkl_path:
-        logging.info(f"Found model.pkl at: {model_pkl_path}")
-        with open(model_pkl_path, 'rb') as model_file:
-            model = pickle.load(model_file)
-        logging.info("Model loaded successfully.")
-        return model
-    else:
-        logging.error("model.pkl not found in downloaded artifacts.")
-        return None
-
-# Main function to execute the process
 def main():
     setup_mlflow_tracking()
     model_name = "save_model"
@@ -71,9 +49,7 @@ def main():
 
     try:
         run_id = get_latest_model_version(model_name, stage)
-        download_path = "artifacts"
-        download_artifacts(run_id, download_path)
-        model = load_model_from_artifacts(download_path)
+        list_artifacts(run_id)
     except Exception as e:
         logging.error(f"An error occurred: {e}")
 
