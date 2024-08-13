@@ -146,4 +146,9 @@ def predict():
     # show
     return render_template('index.html', result=result[0])
 
-if __name__ == "__main__":    app.run(debug=True)
+if __name__ == "__main__":  
+      app.run(debug=True, host = "0.0.0.0" )
+'''
+Using 0.0.0.0 as the host address allows your Flask application to be accessible from any network interface,
+making it useful when running in Docker containers or cloud environments where the host IP address is unknown
+'''
