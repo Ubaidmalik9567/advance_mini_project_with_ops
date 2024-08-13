@@ -2,6 +2,7 @@ import os
 import mlflow
 from mlflow.tracking import MlflowClient
 import logging
+import shutil
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -32,15 +33,20 @@ def get_latest_model_version(model_name, stage):
     if not latest_version_info:
         raise Exception(f"No model found in the '{stage}' stage.")
 
-    return latest_version_info
+    return latest_version_info.run_id
 
-def list_artifacts(run_id):
+def download_specific_artifact(run_id, artifact_path, download_path):
     client = MlflowClient()
-    artifacts_info = client.list_artifacts(run_id)
+    # Create the download path if it doesn't exist
+    os.makedirs(download_path, exist_ok=True)
+
+    # Download only the specified artifact
+    artifact_download_path = client.download_artifacts(run_id, artifact_path, download_path)
     
-    # Print directory structure
-    for artifact in artifacts_info:
-        logging.info(f"Artifact: {artifact.path}")
+    # Log the downloaded file path
+    logging.info(f"Artifact downloaded to: {artifact_download_path}")
+
+    return artifact_download_path
 
 def main():
     setup_mlflow_tracking()
@@ -49,15 +55,17 @@ def main():
 
     try:
         # Get the latest model version information
-        latest_version_info = get_latest_model_version(model_name, stage)
-        run_id = latest_version_info.run_id
-        model_version = latest_version_info.version
-        
-        logging.info(f"Run ID: {run_id}")
-        logging.info(f"Model Version: {model_version}")
+        run_id = get_latest_model_version(model_name, stage)
 
-        # List artifacts
-        list_artifacts(run_id)
+        # Specify the artifact path and download path
+        artifact_path = "model.pkl"
+        download_path = "artifacts"
+
+        # Download only the model.pkl artifact
+        model_pkl_path = download_specific_artifact(run_id, artifact_path, download_path)
+        
+        # Log the path where model.pkl is saved
+        logging.info(f"model.pkl saved at: {model_pkl_path}")
         
     except Exception as e:
         logging.error(f"An error occurred: {e}")
