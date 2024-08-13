@@ -35,43 +35,35 @@ def get_latest_model_version(model_name, stage):
 
     return latest_version_info.run_id
 
-def list_artifacts(run_id):
-    client = MlflowClient()
-    # List all artifact paths
-    artifact_paths = []
-    for artifact in client.list_artifacts(run_id):
-        artifact_paths.append(artifact.path)
-        logging.info(f"Artifact: {artifact.path}")
-    
-    return artifact_paths
-
-def download_specific_artifact(run_id, artifact_path, download_path):
+def download_artifacts(run_id, download_path):
     client = MlflowClient()
     os.makedirs(download_path, exist_ok=True)
-    # Download only the specified artifact
-    artifact_download_path = client.download_artifacts(run_id, artifact_path, download_path)
-    logging.info(f"Artifact downloaded to: {artifact_download_path}")
-    return artifact_download_path
+    client.download_artifacts(run_id, "", download_path)
+    logging.info(f"Artifacts downloaded to: {download_path}")
+
+    # Log all files found in the download path
+    for root, dirs, files in os.walk(download_path):
+        for file in files:
+            logging.info(f"Found file: {os.path.join(root, file)}")
 
 def load_model_from_artifacts(download_path):
     model_pkl_path = None
-    vectorizer_pkl_path = None
     for root, dirs, files in os.walk(download_path):
         if 'model.pkl' in files:
             model_pkl_path = os.path.join(root, 'model.pkl')
-        if 'vectorizer.pkl' in files:
-            vectorizer_pkl_path = os.path.join(root, 'vectorizer.pkl')
-        
+            break
+
     if model_pkl_path:
         logging.info(f"Found model.pkl at: {model_pkl_path}")
         with open(model_pkl_path, 'rb') as model_file:
             model = pickle.load(model_file)
         logging.info("Model loaded successfully.")
-        return model, vectorizer_pkl_path
+        return model
     else:
         logging.error("model.pkl not found in downloaded artifacts.")
-        return None, vectorizer_pkl_path
+        return None
 
+# Main function to execute the process
 def main():
     setup_mlflow_tracking()
     model_name = "save_model"
@@ -79,19 +71,9 @@ def main():
 
     try:
         run_id = get_latest_model_version(model_name, stage)
-        artifact_paths = list_artifacts(run_id)
-
-        # Check and download specific artifacts
-        for artifact in ['model.pkl', 'vectorizer.pkl']:
-            if artifact in artifact_paths:
-                download_path = "artifacts"
-                artifact_download_path = download_specific_artifact(run_id, artifact, download_path)
-                logging.info(f"{artifact} saved at: {artifact_download_path}")
-
-        model, vectorizer_pkl_path = load_model_from_artifacts(download_path)
-        if vectorizer_pkl_path:
-            logging.info(f"Found vectorizer.pkl at: {vectorizer_pkl_path}")
-
+        download_path = "artifacts"
+        download_artifacts(run_id, download_path)
+        model = load_model_from_artifacts(download_path)
     except Exception as e:
         logging.error(f"An error occurred: {e}")
 
