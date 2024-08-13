@@ -1,5 +1,4 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
 import mlflow
 import pickle
 import os
@@ -11,14 +10,10 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import logging
 import nltk
-
 nltk.download('stopwords')
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-# FastAPI app setup
-app = FastAPI()
 
 # Text preprocessing functions
 def lemmatization(text):
@@ -68,6 +63,8 @@ repo_name = "mini_project_with_ops"
 # Set up MLflow tracking URI
 mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
+app = FastAPI()
+
 def get_latest_model_run_id(model_name, stage="Production"):
     client = mlflow.MlflowClient()
     model_versions = client.search_model_versions(f"name='{model_name}'")
@@ -79,6 +76,11 @@ def download_artifacts(run_id, download_path):
     os.makedirs(download_path, exist_ok=True)
     client.download_artifacts(run_id, "", download_path)
     logging.info(f"Artifacts downloaded to: {download_path}")
+
+    # Log all files found in the download path
+    for root, dirs, files in os.walk(download_path):
+        for file in files:
+            logging.info(f"Found file: {os.path.join(root, file)}")
 
 def load_model_and_vectorizer():
     model_name = "save_model"
@@ -119,55 +121,9 @@ def load_model_and_vectorizer():
 # Load model and vectorizer at startup
 model, vectorizer = load_model_and_vectorizer()
 
-# HTML content
-html_content = """
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>Sentiment Analysis</title>
-    </head>
-    <body>
-        <h1>Sentiment Analysis</h1>
-        <form action="/predict" method="post">
-            <label>Write text:</label><br>
-            <textarea name="text" rows="10" cols="40"></textarea><br>
-            <input type="submit" value="Predict">
-        </form>
-        {% if result is not none %}
-            {% if result == 1 %}
-                <h2>Happy</h2>
-            {% else %}
-                <h2>Sad</h2>
-            {% endif %}
-        {% endif %}
-    </body>
-</html>
-"""
-
-@app.get("/", response_class=HTMLResponse)
-async def read_root():
-    return HTMLResponse(content=html_content)
-
-@app.post("/predict")
-async def predict(request: Request):
-    form_data = await request.form()
-    text = form_data.get('text', '')
-
-    # Clean
-    text = normalize_text(text)
-
-    # Feature extraction
-    features = vectorizer.transform([text])
-    features_df = pd.DataFrame.sparse.from_spmatrix(features)
-    features_df = pd.DataFrame(features.toarray(), columns=[str(i) for i in range(features.shape[1])])
-
-    # Prediction
-    result = model.predict(features_df)
-
-    # Render HTML with prediction result
-    result_text = "Happy" if result[0] == 1 else "Sad"
-    response_content = html_content.replace("{{ result is not none }}", f"{{{{ if result == 1 }}}}Happy{{{{ else }}}}Sad{{{{ endif }}}}")
-    return HTMLResponse(content=response_content)
+@app.get("/")
+async def root():
+    return "working fine"
 
 if __name__ == "__main__":
     import uvicorn
