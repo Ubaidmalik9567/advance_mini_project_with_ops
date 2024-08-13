@@ -67,11 +67,11 @@ jobs:
       #   run: |
       #     python download_artifacts.py
       
-      - name: Run Flask app
+      - name: Run app
         if: success()
         env:
           DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}  # Set environment variable for Flask app
         run: |
-          python flask_app/app.py
+          python app.py
 
     

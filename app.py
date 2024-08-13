@@ -1,4 +1,6 @@
-from flask import Flask, render_template, request
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
 import mlflow
 import pickle
 import os
@@ -10,10 +12,14 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import logging
 import nltk
+
 nltk.download('stopwords')
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# FastAPI app setup
+app = FastAPI()
 
 # Text preprocessing functions
 def lemmatization(text):
@@ -62,8 +68,6 @@ repo_name = "mini_project_with_ops"
 
 # Set up MLflow tracking URI
 mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
-
-app = Flask(__name__)
 
 def get_latest_model_run_id(model_name, stage="Production"):
     client = mlflow.MlflowClient()
@@ -121,34 +125,56 @@ def load_model_and_vectorizer():
 # Load model and vectorizer at startup
 model, vectorizer = load_model_and_vectorizer()
 
-@app.route('/')
-def home():
-    return render_template('index.html',result=None)
+# HTML content
+html_content = """
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Sentiment Analysis</title>
+    </head>
+    <body>
+        <h1>Sentiment Analysis</h1>
+        <form action="/predict" method="post">
+            <label>Write text:</label><br>
+            <textarea name="text" rows="10" cols="40"></textarea><br>
+            <input type="submit" value="Predict">
+        </form>
+        {% if result is not none %}
+            {% if result == 1 %}
+                <h2>Happy</h2>
+            {% else %}
+                <h2>Sad</h2>
+            {% endif %}
+        {% endif %}
+    </body>
+</html>
+"""
 
-@app.route('/predict', methods=['POST'])
-def predict():
+@app.get("/", response_class=HTMLResponse)
+async def read_root():
+    return HTMLResponse(content=html_content)
 
-    text = request.form['text']
+@app.post("/predict")
+async def predict(request: Request):
+    form_data = await request.form()
+    text = form_data.get('text', '')
 
-    # clean
+    # Clean
     text = normalize_text(text)
 
-    # bow
+    # Feature extraction
     features = vectorizer.transform([text])
-
-    # Convert sparse matrix to DataFrame
     features_df = pd.DataFrame.sparse.from_spmatrix(features)
     features_df = pd.DataFrame(features.toarray(), columns=[str(i) for i in range(features.shape[1])])
 
-    # prediction
+    # Prediction
     result = model.predict(features_df)
 
-    # show
-    return render_template('index.html', result=result[0])
+    # Render HTML with prediction result
+    result_text = "Happy" if result[0] == 1 else "Sad"
+    response_content = html_content.replace("{{ result is not none }}", f"{{{{ if result == 1 }}}}Happy{{{{ else }}}}Sad{{{{ endif }}}}")
+    return HTMLResponse(content=response_content)
 
-if __name__ == "__main__":  
-      app.run(debug=True, host = "0.0.0.0" )
-'''
-Using 0.0.0.0 as the host address allows your Flask application to be accessible from any network interface,
-making it useful when running in Docker containers or cloud environments where the host IP address is unknown
-'''
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
