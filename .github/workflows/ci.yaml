@@ -90,6 +90,6 @@ jobs:
         env:
           DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}  # Set environment variable for Flask app
         run: |
-          python flask_app/app.py
+          python app.py
 
     
