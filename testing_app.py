@@ -61,37 +61,44 @@ mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
 app = Flask(__name__)
 
+# Singleton pattern to load model and vectorizer once
+class ModelManager:
+    _model = None
+    _vectorizer = None
+
+    @classmethod
+    def load_model_and_vectorizer(cls):
+        if cls._model is None or cls._vectorizer is None:
+            model_name = "save_model"
+            stage = "Production"
+            run_id = get_latest_model_run_id(model_name, stage)
+            if not run_id:
+                raise Exception(f"No model found in the '{stage}' stage.")
+
+            # Load the model directly from MLflow
+            model_uri = f"runs:/{run_id}/model/model.pkl"
+            model_path = mlflow.artifacts.download_artifacts(artifact_uri=model_uri)
+            with open(model_path, 'rb') as model_file:
+                cls._model = pickle.load(model_file)
+            logging.info("Model loaded successfully.")
+
+            # Load the vectorizer directly from MLflow
+            vectorizer_uri = f"runs:/{run_id}/vectorizer.pkl"
+            vectorizer_path = mlflow.artifacts.download_artifacts(artifact_uri=vectorizer_uri)
+            with open(vectorizer_path, 'rb') as vectorizer_file:
+                cls._vectorizer = pickle.load(vectorizer_file)
+            logging.info("Vectorizer loaded successfully.")
+
+        return cls._model, cls._vectorizer
+
 def get_latest_model_run_id(model_name, stage="Production"):
     client = mlflow.MlflowClient()
     model_versions = client.search_model_versions(f"name='{model_name}'")
     latest_version_info = next((v for v in model_versions if v.current_stage == stage), None)
     return latest_version_info.run_id if latest_version_info else None
 
-def load_model_and_vectorizer():
-    model_name = "save_model"
-    stage = "Production"
-    run_id = get_latest_model_run_id(model_name, stage)
-    if not run_id:
-        raise Exception(f"No model found in the '{stage}' stage.")
-
-    # Load the model directly from MLflow
-    model_uri = f"runs:/{run_id}/model/model.pkl"
-    model_path = mlflow.artifacts.download_artifacts(artifact_uri=model_uri)
-    with open(model_path, 'rb') as model_file:
-        model = pickle.load(model_file)
-    logging.info("Model loaded successfully.")
-
-    # Load the vectorizer directly from MLflow
-    vectorizer_uri = f"runs:/{run_id}/vectorizer.pkl"
-    vectorizer_path = mlflow.artifacts.download_artifacts(artifact_uri=vectorizer_uri)
-    with open(vectorizer_path, 'rb') as vectorizer_file:
-        vectorizer = pickle.load(vectorizer_file)
-    logging.info("Vectorizer loaded successfully.")
-
-    return model, vectorizer
-
 # Load model and vectorizer at startup
-model, vectorizer = load_model_and_vectorizer()
+model, vectorizer = ModelManager.load_model_and_vectorizer()
 
 # HTML template as a string
 html_template = '''
