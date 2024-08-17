@@ -76,14 +76,14 @@ def load_model_and_vectorizer():
 
     # Load the model directly from MLflow
     model_uri = f"runs:/{run_id}/model/model.pkl"
-    model_path = mlflow.artifacts.download_artifacts(run_id, "model/model.pkl")
+    model_path = mlflow.artifacts.download_artifacts(artifact_uri=model_uri)
     with open(model_path, 'rb') as model_file:
         model = pickle.load(model_file)
     logging.info("Model loaded successfully.")
 
     # Load the vectorizer directly from MLflow
     vectorizer_uri = f"runs:/{run_id}/vectorizer.pkl"
-    vectorizer_path = mlflow.artifacts.download_artifacts(run_id, "vectorizer.pkl")
+    vectorizer_path = mlflow.artifacts.download_artifacts(artifact_uri=vectorizer_uri)
     with open(vectorizer_path, 'rb') as vectorizer_file:
         vectorizer = pickle.load(vectorizer_file)
     logging.info("Vectorizer loaded successfully.")
