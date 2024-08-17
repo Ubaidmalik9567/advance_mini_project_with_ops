@@ -1,6 +1,4 @@
-from fastapi import FastAPI, Form, Request
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
+from flask import Flask, render_template_string, request
 import mlflow
 import pickle
 import pandas as pd
@@ -10,8 +8,6 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import logging
 import os
-
-# nltk.download('stopwords')
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -49,7 +45,7 @@ def normalize_text(text):
     text = lemmatization(text)
     return text
 
-# Tracking by using key-based authentication
+# Set up DagsHub credentials for MLflow tracking
 dagshub_token = os.getenv("DAGSHUB_PAT")
 if not dagshub_token:
     raise EnvironmentError("DAGSHUB_PAT environment variable is not set")
@@ -64,8 +60,7 @@ repo_name = "mini_project_with_ops"
 # Set up MLflow tracking URI
 mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
-app = FastAPI()
-templates = Jinja2Templates(directory=".")
+app = Flask(__name__)
 
 def get_latest_model_run_id(model_name, stage="Production"):
     client = mlflow.MlflowClient()
@@ -82,6 +77,7 @@ def load_model_and_vectorizer():
 
     # Load the model directly from MLflow
     model_uri = f"runs:/{run_id}/model/model.pkl"
+    logging.info(f"Loading model from {model_uri}")
     model_path = mlflow.artifacts.download_artifacts(model_uri)
     with open(model_path, 'rb') as model_file:
         model = pickle.load(model_file)
@@ -89,6 +85,7 @@ def load_model_and_vectorizer():
 
     # Load the vectorizer directly from MLflow
     vectorizer_uri = f"runs:/{run_id}/vectorizer.pkl"
+    logging.info(f"Loading vectorizer from {vectorizer_uri}")
     vectorizer_path = mlflow.artifacts.download_artifacts(vectorizer_uri)
     with open(vectorizer_path, 'rb') as vectorizer_file:
         vectorizer = pickle.load(vectorizer_file)
@@ -99,47 +96,50 @@ def load_model_and_vectorizer():
 # Load model and vectorizer at startup
 model, vectorizer = load_model_and_vectorizer()
 
-@app.get("/", response_class=HTMLResponse)
-async def home(request):
-    html_template = '''
-    <!DOCTYPE html>
-    <html>
-        <head>
-            <title>Sentiment Analysis</title>
-        </head>
-        <body>
-            <h1>Sentiment Analysis</h1>
-            <form action="/predict" method="post">
-                <label>Write text:</label><br>
-                <textarea name="text" rows="10" cols="40"></textarea><br>
-                <input type="submit" value="Predict">
-            </form>
-            {% if result %}
-                <h2>Prediction: {{ result.label }}</h2>
-                <p>Probability of Happy: {{ result.probability[1] }}</p>
-                <p>Probability of Sad: {{ result.probability[0] }}</p>
-            {% endif %}
-        </body>
-    </html>
-    '''
-    return templates.TemplateResponse("index.html", {"request": request, "result": None})
+# HTML template as a string
+html_template = '''
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Sentiment Analysis</title>
+    </head>
+    <body>
+        <h1>Sentiment Analysis</h1>
+        <form action="/predict" method="POST">
+            <label>Write text:</label><br>
+            <textarea name="text" rows="10" cols="40"></textarea><br>
+            <input type="submit" value="Predict">
+        </form>
+        {% if result %}
+            <h2>Prediction: {{ result.label }}</h2>
+            <p>Probability of Happy: {{ result.probability[1] }}</p>
+            <p>Probability of Sad: {{ result.probability[0] }}</p>
+        {% endif %}
+    </body>
+</html>
+'''
 
-@app.post("/predict", response_class=HTMLResponse)
-async def predict(request: Request, text: str = Form(...)):
+@app.route('/')
+def home():
+    return render_template_string(html_template, result=None)
+
+@app.route('/predict', methods=['POST'])
+def predict():
+    text = request.form['text']
+    logging.info(f"Received text for prediction: {text}")
+
+    # Clean the input text
     text = normalize_text(text)
+    logging.info(f"Normalized text: {text}")
 
     # Vectorize the text
     features = vectorizer.transform([text])
-
-    # Convert sparse matrix to DataFrame
     features_df = pd.DataFrame.sparse.from_spmatrix(features)
     features_df = pd.DataFrame(features.toarray(), columns=[str(i) for i in range(features.shape[1])])
 
     # Predict probabilities and class
     probabilities = model.predict_proba(features_df)[0]
     predicted_class = model.predict(features_df)[0]
-
-    # Determine class labels
     class_labels = ['Sad', 'Happy']
     result = {
         'label': class_labels[int(predicted_class)],
@@ -151,8 +151,7 @@ async def predict(request: Request, text: str = Form(...)):
     logging.info(f"Predicted probabilities: {result['probability']}")
 
     # Show result
-    return templates.TemplateResponse("index.html", {"request": request, "result": result})
+    return render_template_string(html_template, result=result)
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=5000)
+    app.run(debug=False, host="0.0.0.0")
