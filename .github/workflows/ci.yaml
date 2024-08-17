@@ -90,7 +90,7 @@ jobs:
         env:
           DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}  # Set environment variable for Flask app
         run: |
-          python flask_app/app.py
+          python app.py
 
     # dckr_pat_-2GFCra820hJaFf2FJTSQoyV72M ,, docker login -u ubaidmalik1015
     # docker run -p 8000:5000 -e DAGSHUB_PAT=77eb2325e588197f499b992a77be41a6bc3f4abf mini_project_with_ops:self_build
