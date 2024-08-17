@@ -45,7 +45,6 @@ def normalize_text(text):
     text = lemmatization(text)
     return text
 
-# Set up DagsHub credentials for MLflow tracking
 dagshub_token = os.getenv("DAGSHUB_PAT")
 if not dagshub_token:
     raise EnvironmentError("DAGSHUB_PAT environment variable is not set")
@@ -77,7 +76,6 @@ def load_model_and_vectorizer():
 
     # Load the model directly from MLflow
     model_uri = f"runs:/{run_id}/model/model.pkl"
-    logging.info(f"Loading model from {model_uri}")
     model_path = mlflow.artifacts.download_artifacts(model_uri)
     with open(model_path, 'rb') as model_file:
         model = pickle.load(model_file)
@@ -85,7 +83,6 @@ def load_model_and_vectorizer():
 
     # Load the vectorizer directly from MLflow
     vectorizer_uri = f"runs:/{run_id}/vectorizer.pkl"
-    logging.info(f"Loading vectorizer from {vectorizer_uri}")
     vectorizer_path = mlflow.artifacts.download_artifacts(vectorizer_uri)
     with open(vectorizer_path, 'rb') as vectorizer_file:
         vectorizer = pickle.load(vectorizer_file)
@@ -100,22 +97,22 @@ model, vectorizer = load_model_and_vectorizer()
 html_template = '''
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Sentiment Analysis</title>
-    </head>
-    <body>
-        <h1>Sentiment Analysis</h1>
-        <form action="/predict" method="POST">
-            <label>Write text:</label><br>
-            <textarea name="text" rows="10" cols="40"></textarea><br>
-            <input type="submit" value="Predict">
-        </form>
-        {% if result %}
-            <h2>Prediction: {{ result.label }}</h2>
-            <p>Probability of Happy: {{ result.probability[1] }}</p>
-            <p>Probability of Sad: {{ result.probability[0] }}</p>
-        {% endif %}
-    </body>
+<head>
+    <title>Sentiment Analysis</title>
+</head>
+<body>
+    <h1>Sentiment Analysis</h1>
+    <form action="/predict" method="POST">
+        <label>Write text:</label><br>
+        <textarea name="text" rows="10" cols="40"></textarea><br>
+        <input type="submit" value="Predict">
+    </form>
+    {% if result %}
+        <h2>Prediction: {{ result.label }}</h2>
+        <p>Probability of Happy: {{ result.probability[1] }}</p>
+        <p>Probability of Sad: {{ result.probability[0] }}</p>
+    {% endif %}
+</body>
 </html>
 '''
 
@@ -126,20 +123,22 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     text = request.form['text']
-    logging.info(f"Received text for prediction: {text}")
 
     # Clean the input text
     text = normalize_text(text)
-    logging.info(f"Normalized text: {text}")
 
     # Vectorize the text
     features = vectorizer.transform([text])
+
+    # Convert sparse matrix to DataFrame
     features_df = pd.DataFrame.sparse.from_spmatrix(features)
     features_df = pd.DataFrame(features.toarray(), columns=[str(i) for i in range(features.shape[1])])
 
     # Predict probabilities and class
     probabilities = model.predict_proba(features_df)[0]
     predicted_class = model.predict(features_df)[0]
+
+    # Determine class labels
     class_labels = ['Sad', 'Happy']
     result = {
         'label': class_labels[int(predicted_class)],
@@ -153,5 +152,9 @@ def predict():
     # Show result
     return render_template_string(html_template, result=result)
 
+@app.route('/test')
+def test():
+    return "Test route working!"
+
 if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0")
+    app.run(debug=True, host="0.0.0.0")
