@@ -86,15 +86,14 @@ mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 app = Flask(__name__)
 
 # load model from model registry
-def get_latest_model_version(model_name):
+def get_latest_model_run_id(model_name, stage="Production"):
     client = mlflow.MlflowClient()
-    latest_version = client.get_latest_versions(model_name, stages=["Production"])
-    if not latest_version:
-        latest_version = client.get_latest_versions(model_name, stages=["None"])
-    return latest_version[0].version if latest_version else None
+    model_versions = client.search_model_versions(f"name='{model_name}'")
+    latest_version_info = next((v for v in model_versions if v.current_stage == stage), None)
+    return latest_version_info.run_id if latest_version_info else None
 
 model_name = "my_model"
-model_version = get_latest_model_version(model_name)
+model_version = get_latest_model_run_id(model_name)
 
 model_uri = f'models:/{model_name}/{model_version}'
 model = mlflow.pyfunc.load_model(model_uri)
