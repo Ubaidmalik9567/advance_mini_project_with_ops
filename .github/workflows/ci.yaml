@@ -89,7 +89,7 @@ jobs:
         env:
           DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}  # Set environment variable for FastAPI app
         run: |
-          uvicorn test_app:app --host 0.0.0.0 --port 8000 --reload
+          uvicorn testing_app:app --host 0.0.0.0 --port 8000 --reload
 
 
     # dckr_pat_-2GFCra820hJaFf2FJTSQoyV72M ,, docker login -u ubaidmalik1015
