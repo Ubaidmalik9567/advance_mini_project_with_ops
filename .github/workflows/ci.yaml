@@ -92,6 +92,13 @@ jobs:
           export MLFLOW_TRACKING_USERNAME=${{ secrets.DAGSHUB_USERNAME }}
           export MLFLOW_TRACKING_PASSWORD=${{ secrets.DAGSHUB_PAT }}
 
+        
+      - name: Print Environment Variables
+        run: |
+          echo "MLFLOW_TRACKING_URI=$MLFLOW_TRACKING_URI"
+          echo "MLFLOW_TRACKING_USERNAME=$MLFLOW_TRACKING_USERNAME"
+          echo "MLFLOW_TRACKING_PASSWORD is set: ${MLFLOW_TRACKING_PASSWORD:+yes}"
+
       - name: Run Flask app
         if: success()
         run: |
