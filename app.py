@@ -46,13 +46,8 @@ def normalize_text(text):
     text = lemmatization(text)
     return text
 
-# Initialize Dagshub with PAT
-dagshub.init(
-    repo_owner='Ubaidmalik9567',
-    repo_name='mini_project_with_ops',
-    mlflow=True,
-    auth_token=os.getenv('DAGSHUB_PAT')  # Ensure the token is passed
-)
+# Initialize Dagshub
+dagshub.init(repo_owner='Ubaidmalik9567', repo_name='mini_project_with_ops', mlflow=True)
 mlflow.set_tracking_uri("https://dagshub.com/Ubaidmalik9567/mini_project_with_ops.mlflow")
 
 app = Flask(__name__)
