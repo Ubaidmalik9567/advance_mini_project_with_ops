@@ -1,5 +1,5 @@
-import streamlit as st
-import mlflow
+from fastapi import FastAPI, Form
+from fastapi.responses import JSONResponse
 import pickle
 import pandas as pd
 import re
@@ -11,6 +11,9 @@ import os
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Initialize FastAPI app
+app = FastAPI()
 
 # Text preprocessing functions
 def lemmatization(text):
@@ -45,94 +48,53 @@ def normalize_text(text):
     text = lemmatization(text)
     return text
 
-dagshub_token = os.getenv("DAGSHUB_PAT")
-if not dagshub_token:
-    raise EnvironmentError("DAGSHUB_PAT environment variable is not set")
+# Load model and vectorizer from files
+model_path = 'models/model.pkl'  # Adjust the path as needed
+vectorizer_path = 'models/vectorizer.pkl'  # Adjust the path as needed
 
-os.environ["MLFLOW_TRACKING_USERNAME"] = dagshub_token
-os.environ["MLFLOW_TRACKING_PASSWORD"] = dagshub_token
+with open(model_path, 'rb') as model_file:
+    model = pickle.load(model_file)
+logging.info("Model loaded successfully.")
 
-dagshub_url = "https://dagshub.com"
-repo_owner = "Ubaidmalik9567"
-repo_name = "mini_project_with_ops"
+with open(vectorizer_path, 'rb') as vectorizer_file:
+    vectorizer = pickle.load(vectorizer_file)
+logging.info("Vectorizer loaded successfully.")
 
-# Set up MLflow tracking URI
-mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
+@app.post("/predict")
+async def predict(text: str = Form(...)):
+    try:
+        # Clean and preprocess the input text
+        text = normalize_text(text)
 
-# Singleton pattern to load model and vectorizer once
-class ModelManager:
-    _model = None
-    _vectorizer = None
+        # Vectorize the text
+        features = vectorizer.transform([text])
 
-    @classmethod
-    def load_model_and_vectorizer(cls):
-        if cls._model is None or cls._vectorizer is None:
-            model_name = "save_model"
-            stage = "Production"
-            run_id = get_latest_model_run_id(model_name, stage)
-            if not run_id:
-                raise Exception(f"No model found in the '{stage}' stage.")
+        # Convert sparse matrix to DataFrame
+        features_df = pd.DataFrame(features.toarray(), columns=[str(i) for i in range(features.shape[1])])
 
-            # Load the model directly from MLflow
-            model_uri = f"runs:/{run_id}/model/model.pkl"
-            model_path = mlflow.artifacts.download_artifacts(artifact_uri=model_uri)
-            with open(model_path, 'rb') as model_file:
-                cls._model = pickle.load(model_file)
-            logging.info("Model loaded successfully.")
+        # Predict probabilities and class
+        probabilities = model.predict_proba(features_df)[0]
+        predicted_class = model.predict(features_df)[0]
 
-            # Load the vectorizer directly from MLflow
-            vectorizer_uri = f"runs:/{run_id}/vectorizer.pkl"
-            vectorizer_path = mlflow.artifacts.download_artifacts(artifact_uri=vectorizer_uri)
-            with open(vectorizer_path, 'rb') as vectorizer_file:
-                cls._vectorizer = pickle.load(vectorizer_file)
-            logging.info("Vectorizer loaded successfully.")
-
-        return cls._model, cls._vectorizer
-
-def get_latest_model_run_id(model_name, stage="Production"):
-    client = mlflow.MlflowClient()
-    model_versions = client.search_model_versions(f"name='{model_name}'")
-    latest_version_info = next((v for v in model_versions if v.current_stage == stage), None)
-    return latest_version_info.run_id if latest_version_info else None
-
-# Load model and vectorizer at startup
-model, vectorizer = ModelManager.load_model_and_vectorizer()
-
-# Streamlit application
-def main():
-    st.title('Sentiment Analysis')
-
-    # Input form
-    text = st.text_area("Write text:")
-
-    if st.button('Predict'):
-        if text:
-            # Clean the input text
-            text = normalize_text(text)
-
-            # Vectorize the text
-            features = vectorizer.transform([text])
-
-            # Convert sparse matrix to DataFrame
-            features_df = pd.DataFrame(features.toarray(), columns=[str(i) for i in range(features.shape[1])])
-
-            # Predict probabilities and class
-            probabilities = model.predict_proba(features_df)[0]
-            predicted_class = model.predict(features_df)[0]
-
-            # Determine class labels
-            class_labels = ['Sad', 'Happy']
-            result = {
-                'label': class_labels[int(predicted_class)],
-                'probability': probabilities
+        # Determine class labels
+        class_labels = ['Sad', 'Happy']
+        result = {
+            'label': class_labels[int(predicted_class)],
+            'probability': {
+                'Happy': probabilities[1],
+                'Sad': probabilities[0]
             }
+        }
 
-            # Show result
-            st.write(f"Prediction: {result['label']}")
-            st.write(f"Probability of Happy: {result['probability'][1]}")
-            st.write(f"Probability of Sad: {result['probability'][0]}")
-        else:
-            st.write("Please enter some text for prediction.")
+        return JSONResponse(content=result)
+    except Exception as e:
+        logging.error(f"Error during prediction: {e}")
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+@app.get("/")
+async def read_root():
+    return {"message": "Working fine"}
 
 if __name__ == "__main__":
-    main()
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
