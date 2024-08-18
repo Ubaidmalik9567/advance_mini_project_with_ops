@@ -142,4 +142,4 @@ def predict():
     return render_template_string(html_template, result=result)
 
 if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0")
+    app.run(debug=False, host="0.0.0.0") # that code set env in ci.yml
