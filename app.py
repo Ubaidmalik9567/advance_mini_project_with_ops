@@ -57,9 +57,11 @@ def load_model_and_vectorizer():
     model_name = "save_model"
     stage = "Production"
     run_id = get_latest_model_run_id(model_name, stage)
+        # Print or log the run_id
+    logging.info(f"Loading model and vectorizer from run ID: {run_id}")
     if not run_id:
         raise Exception(f"No model found in the '{stage}' stage.")
-
+    
     # Load the model directly from MLflow
     model_uri = f"runs:/{run_id}/model/model.pkl"
     model_path = mlflow.artifacts.download_artifacts(model_uri)
