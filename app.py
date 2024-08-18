@@ -1,4 +1,6 @@
-from flask import Flask, render_template_string, request
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
 import mlflow
 import pickle
 import pandas as pd
@@ -45,7 +47,11 @@ def normalize_text(text):
     text = lemmatization(text)
     return text
 
-app = Flask(__name__)
+app = FastAPI()
+
+class PredictionResult(BaseModel):
+    label: str
+    probability: list
 
 def get_latest_model_run_id(model_name, stage="Production"):
     client = mlflow.MlflowClient()
@@ -91,7 +97,7 @@ html_template = '''
     </head>
     <body>
         <h1>Sentiment Analysis</h1>
-        <form action="/predict" method="POST">
+        <form action="/predict" method="post">
             <label>Write text:</label><br>
             <textarea name="text" rows="10" cols="40"></textarea><br>
             <input type="submit" value="Predict">
@@ -105,14 +111,12 @@ html_template = '''
 </html>
 '''
 
-@app.route('/')
-def home():
-    return render_template_string(html_template, result=None)
+@app.get("/", response_class=HTMLResponse)
+async def home():
+    return html_template.replace("{% if result %}", "").replace("{% endif %}", "")
 
-@app.route('/predict', methods=['POST'])
-def predict():
-    text = request.form['text']
-
+@app.post("/predict", response_class=HTMLResponse)
+async def predict(text: str = Form(...)):
     # Clean the input text
     text = normalize_text(text)
 
@@ -139,7 +143,12 @@ def predict():
     logging.info(f"Predicted probabilities: {result['probability']}")
 
     # Show result
-    return render_template_string(html_template, result=result)
+    result_html = html_template.replace("{% if result %}", "").replace("{% endif %}", "")
+    result_html = result_html.replace("{{ result.label }}", result['label'])
+    result_html = result_html.replace("{{ result.probability[1] }}", str(result['probability'][1]))
+    result_html = result_html.replace("{{ result.probability[0] }}", str(result['probability'][0]))
+    return result_html
 
 if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0") # that code set env in ci.yml
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
