@@ -4,18 +4,20 @@ FROM python:3.9
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy the application code, requirements file, and model/vectorizer files into the container
+# Copy the requirements file first to leverage Docker cache for dependencies
 COPY requirements.txt /app/
-COPY testing_app.py /app/
-COPY models/model.pkl /app/models/model.pkl
-COPY models/vectorizer.pkl /app/models/vectorizer.pkl
 
 # Install Python dependencies from requirements.txt
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+RUN pip install --upgrade pip \
+    && pip install -r requirements.txt
 
 # Download NLTK data required for text preprocessing
 RUN python -m nltk.downloader stopwords wordnet
+
+# Copy the rest of the application code into the container
+COPY testing_app.py /app/
+COPY models/model.pkl /app/models/model.pkl
+COPY models/vectorizer.pkl /app/models/vectorizer.pkl
 
 # Expose the port that the FastAPI application will run on
 EXPOSE 8000
