@@ -52,7 +52,7 @@ def normalize_text(text):
 dagshub.init(repo_owner='Ubaidmalik9567', repo_name='mini_project_with_ops', mlflow=True)
 
 # Set the token as an environment variable
-token = os.getenv("DAGSHUB_PAT", "77eb2325e588197f499b992a77be41a6bc3f4abf")  # Default to your token if not set
+token = os.getenv("DAGSHUB_PAT")
 
 # Set the MLflow tracking URI with authentication using the token
 mlflow.set_tracking_uri(f"https://{token}@dagshub.com/Ubaidmalik9567/mini_project_with_ops.mlflow")
