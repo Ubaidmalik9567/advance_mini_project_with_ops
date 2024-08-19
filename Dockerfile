@@ -5,14 +5,14 @@ FROM python:3.10-slim
 WORKDIR /app
 
 # Copy the requirements file into the container
-COPY requirements.txt .
+COPY requirements.txt /app/
 
 # Install dependencies
 
 RUN pip install -r requirements.txt
     
 # Copy the application code into the container
-COPY . /testing_fastapi_code
+COPY testing_fastapi_code.py /app/
 
 # Expose the port on which the FastAPI application will run
 EXPOSE 8000
