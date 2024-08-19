@@ -96,14 +96,6 @@ def load_model_and_vectorizer():
 # Load model and vectorizer at startup
 model, vectorizer = load_model_and_vectorizer()
 
-with open(model, 'rb') as model_file:
-    model = pickle.load(model_file)
-logging.info("Model loaded successfully.")
-
-with open(vectorizer, 'rb') as vectorizer_file:
-    vectorizer = pickle.load(vectorizer_file)
-logging.info("Vectorizer loaded successfully.")
-
 @app.post("/predict")
 async def predict(text: str = Form(...)):
     try:
