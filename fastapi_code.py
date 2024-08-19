@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Form
+from fastapi_code import FastAPI, Form
 from fastapi.responses import JSONResponse
 import pickle
 import pandas as pd

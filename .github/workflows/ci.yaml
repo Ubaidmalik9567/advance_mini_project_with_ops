@@ -96,7 +96,7 @@ jobs:
 
       - name: Run fastapi file
         run: |
-          uvicorn fastapi:app --host 0.0.0.0 --port 8000
+          uvicorn fastapi_code:app --host 0.0.0.0 --port 8000
  
 
 
