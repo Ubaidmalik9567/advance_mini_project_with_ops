@@ -8,7 +8,6 @@ import string
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import logging
-import dagshub
 from pydantic import BaseModel
 from typing import Optional
 
@@ -49,9 +48,6 @@ def normalize_text(text):
     text = removing_urls(text)
     text = lemmatization(text)
     return text
-
-# dagshub.init(repo_owner='Ubaidmalik9567', repo_name='mini_project_with_ops', mlflow=True)
-# mlflow.set_tracking_uri("https://dagshub.com/Ubaidmalik9567/mini_project_with_ops.mlflow")
 
 app = FastAPI()
 
@@ -112,7 +108,7 @@ html_template = '''
 
 @app.get("/", response_class=HTMLResponse)
 async def home():
-    return html_template.replace("{% if result %}", "").replace("{% endif %}", "")
+    return HTMLResponse(content=html_template)
 
 @app.post("/predict", response_class=HTMLResponse)
 async def predict(text: str = Form(...)):
@@ -147,7 +143,7 @@ async def predict(text: str = Form(...)):
     result_html = result_html.replace("{{ result['probability'][1] }}", str(result['probability'][1]))
     result_html = result_html.replace("{{ result['probability'][0] }}", str(result['probability'][0]))
 
-    return result_html
+    return HTMLResponse(content=result_html)
 
 if __name__ == "__main__":
     import uvicorn
