@@ -1,6 +1,4 @@
-from fastapi import FastAPI, Request, Form
-from fastapi.responses import HTMLResponse
-from pydantic import BaseModel
+from flask import Flask, render_template_string, request
 import mlflow
 import pickle
 import pandas as pd
@@ -9,7 +7,9 @@ import string
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import logging
-import os
+import dagshub
+
+# nltk.download('stopwords')
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -47,11 +47,10 @@ def normalize_text(text):
     text = lemmatization(text)
     return text
 
-app = FastAPI()
+dagshub.init(repo_owner='Ubaidmalik9567', repo_name='mini_project_with_ops', mlflow=True)
+mlflow.set_tracking_uri("https://dagshub.com/Ubaidmalik9567/mini_project_with_ops.mlflow")
 
-class PredictionResult(BaseModel):
-    label: str
-    probability: list
+app = Flask(__name__)
 
 def get_latest_model_run_id(model_name, stage="Production"):
     client = mlflow.MlflowClient()
@@ -65,9 +64,6 @@ def load_model_and_vectorizer():
     run_id = get_latest_model_run_id(model_name, stage)
     if not run_id:
         raise Exception(f"No model found in the '{stage}' stage.")
-    
-    # Print or log the run_id
-    logging.info(f"Loading model and vectorizer from run ID: {run_id}")
 
     # Load the model directly from MLflow
     model_uri = f"runs:/{run_id}/model/model.pkl"
@@ -97,7 +93,7 @@ html_template = '''
     </head>
     <body>
         <h1>Sentiment Analysis</h1>
-        <form action="/predict" method="post">
+        <form action="/predict" method="POST">
             <label>Write text:</label><br>
             <textarea name="text" rows="10" cols="40"></textarea><br>
             <input type="submit" value="Predict">
@@ -111,12 +107,14 @@ html_template = '''
 </html>
 '''
 
-@app.get("/", response_class=HTMLResponse)
-async def home():
-    return html_template.replace("{% if result %}", "").replace("{% endif %}", "")
+@app.route('/')
+def home():
+    return render_template_string(html_template, result=None)
 
-@app.post("/predict", response_class=HTMLResponse)
-async def predict(text: str = Form(...)):
+@app.route('/predict', methods=['POST'])
+def predict():
+    text = request.form['text']
+
     # Clean the input text
     text = normalize_text(text)
 
@@ -143,12 +141,7 @@ async def predict(text: str = Form(...)):
     logging.info(f"Predicted probabilities: {result['probability']}")
 
     # Show result
-    result_html = html_template.replace("{% if result %}", "").replace("{% endif %}", "")
-    result_html = result_html.replace("{{ result.label }}", result['label'])
-    result_html = result_html.replace("{{ result.probability[1] }}", str(result['probability'][1]))
-    result_html = result_html.replace("{{ result.probability[0] }}", str(result['probability'][0]))
-    return result_html
+    return render_template_string(html_template, result=result)
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    app.run(debug=False, host="0.0.0.0")
