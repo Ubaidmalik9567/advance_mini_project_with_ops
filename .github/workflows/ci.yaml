@@ -96,7 +96,7 @@ jobs:
 
       - name: Run fastapi file
         env:
-            DAGSHUB_PAT: ${{/ secrets.DAGSHUB_PAT }}
+            DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
         run: |
           uvicorn testing_fastapi_code:app --reload 
 
