@@ -1,13 +1,16 @@
-from fastapi import FastAPI, Form
-from fastapi.responses import JSONResponse
+import os
+import mlflow
+from mlflow.tracking import MlflowClient
+import logging
 import pickle
 import pandas as pd
 import re
 import string
+from fastapi import FastAPI, Form
+from fastapi.responses import JSONResponse
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
-import logging
-import os
+import dagshub
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -48,17 +51,38 @@ def normalize_text(text):
     text = lemmatization(text)
     return text
 
-# Load model and vectorizer from files
-model_path = 'updated_artifacts/model.pkl'  # Adjust the path as needed
-vectorizer_path = 'updated_artifacts/vectorizer.pkl'  # Adjust the path as needed
+def setup_mlflow_tracking():
+    dagshub.init(repo_owner='Ubaidmalik9567', repo_name='mini_project_with_ops', mlflow=True)
+    mlflow.set_tracking_uri("https://dagshub.com/Ubaidmalik9567/mini_project_with_ops.mlflow")
 
-with open(model_path, 'rb') as model_file:
-    model = pickle.load(model_file)
-logging.info("Model loaded successfully.")
+def get_latest_model_version(model_name, stage):
+    client = MlflowClient()
+    model_versions = client.search_model_versions(f"name='{model_name}'")
+    latest_version_info = next(
+        (v for v in model_versions if v.current_stage == stage), None
+    )
 
-with open(vectorizer_path, 'rb') as vectorizer_file:
-    vectorizer = pickle.load(vectorizer_file)
-logging.info("Vectorizer loaded successfully.")
+    if not latest_version_info:
+        raise Exception(f"No model found in the '{stage}' stage.")
+
+    return latest_version_info.run_id
+
+def download_specific_artifact(run_id, artifact_path, download_path):
+    client = MlflowClient()
+    os.makedirs(download_path, exist_ok=True)
+    client.download_artifacts(run_id, artifact_path, download_path)
+    logging.info(f"Artifact '{artifact_path}' downloaded to: {download_path}")
+
+def load_model_and_vectorizer(model_path, vectorizer_path):
+    with open(model_path, 'rb') as model_file:
+        model = pickle.load(model_file)
+    logging.info("Model loaded successfully.")
+
+    with open(vectorizer_path, 'rb') as vectorizer_file:
+        vectorizer = pickle.load(vectorizer_file)
+    logging.info("Vectorizer loaded successfully.")
+
+    return model, vectorizer
 
 @app.post("/predict")
 async def predict(text: str = Form(...)):
@@ -95,6 +119,29 @@ async def predict(text: str = Form(...)):
 async def read_root():
     return {"message": "Working fine"}
 
+def main():
+    setup_mlflow_tracking()
+    model_name = "save_model"
+    stage = "Production"
+
+    try:
+        run_id = get_latest_model_version(model_name, stage)
+        model_download_path = "updated_artifacts/model"
+        vectorizer_download_path = "updated_artifacts"
+
+        # Download only the model and vectorizer files
+        download_specific_artifact(run_id, "model/model.pkl", model_download_path)
+        download_specific_artifact(run_id, "vectorizer.pkl", vectorizer_download_path)
+
+        global model, vectorizer
+        model, vectorizer = load_model_and_vectorizer(
+            os.path.join(model_download_path, 'model.pkl'),
+            os.path.join(vectorizer_download_path, 'vectorizer.pkl')
+        )
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+
 if __name__ == "__main__":
+    main()
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000) # use this for running: uvicorn testing_app:app --reload
+    uvicorn.run(app, host="0.0.0.0", port=8000)
