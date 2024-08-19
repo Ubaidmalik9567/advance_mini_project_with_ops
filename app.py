@@ -8,6 +8,7 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import logging
 import dagshub
+import os
 
 # nltk.download('stopwords')
 
@@ -47,8 +48,14 @@ def normalize_text(text):
     text = lemmatization(text)
     return text
 
+# Initialize the DagsHub repository and set the MLflow tracking URI
 dagshub.init(repo_owner='Ubaidmalik9567', repo_name='mini_project_with_ops', mlflow=True)
-mlflow.set_tracking_uri("https://dagshub.com/Ubaidmalik9567/mini_project_with_ops.mlflow")
+
+# Set the token as an environment variable
+token = os.getenv("DAGSHUB_PAT", "77eb2325e588197f499b992a77be41a6bc3f4abf")  # Default to your token if not set
+
+# Set the MLflow tracking URI with authentication using the token
+mlflow.set_tracking_uri(f"https://{token}@dagshub.com/Ubaidmalik9567/mini_project_with_ops.mlflow")
 
 app = Flask(__name__)
 
