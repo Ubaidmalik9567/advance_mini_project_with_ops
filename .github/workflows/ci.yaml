@@ -84,15 +84,12 @@ jobs:
       #     DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
       #   run: |
       #     python download_artifacts.py
-      - name: Run FastAPI app
+      - name: Run Flask app
         if: success()
         env:
           DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}  # Set environment variable for FastAPI app
         run: |
-          uvicorn testing_app:app --host 0.0.0.0 --port 8000 --reload &
-          sleep 10  # Give the server time to start
-          curl http://127.0.0.1:8000  # Test the endpoint to ensure it's running
-
+          uvicorn testing_app:app --reload --timeout-keep-alive 120
 
 
     # dckr_pat_-2GFCra820hJaFf2FJTSQoyV72M ,, docker login -u ubaidmalik1015
