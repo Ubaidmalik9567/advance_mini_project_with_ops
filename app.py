@@ -1,4 +1,5 @@
-from flask import Flask, render_template_string, request
+from fastapi import FastAPI, Form
+from fastapi.responses import HTMLResponse
 import mlflow
 import pickle
 import pandas as pd
@@ -8,6 +9,8 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import logging
 import dagshub
+from pydantic import BaseModel
+from typing import Optional
 
 # nltk.download('stopwords')
 
@@ -50,7 +53,7 @@ def normalize_text(text):
 dagshub.init(repo_owner='Ubaidmalik9567', repo_name='mini_project_with_ops', mlflow=True)
 mlflow.set_tracking_uri("https://dagshub.com/Ubaidmalik9567/mini_project_with_ops.mlflow")
 
-app = Flask(__name__)
+app = FastAPI()
 
 def get_latest_model_run_id(model_name, stage="Production"):
     client = mlflow.MlflowClient()
@@ -99,22 +102,20 @@ html_template = '''
             <input type="submit" value="Predict">
         </form>
         {% if result %}
-            <h2>Prediction: {{ result.label }}</h2>
-            <p>Probability of Happy: {{ result.probability[1] }}</p>
-            <p>Probability of Sad: {{ result.probability[0] }}</p>
+            <h2>Prediction: {{ result['label'] }}</h2>
+            <p>Probability of Happy: {{ result['probability'][1] }}</p>
+            <p>Probability of Sad: {{ result['probability'][0] }}</p>
         {% endif %}
     </body>
 </html>
 '''
 
-@app.route('/')
-def home():
-    return render_template_string(html_template, result=None)
+@app.get("/", response_class=HTMLResponse)
+async def home():
+    return html_template.replace("{% if result %}", "").replace("{% endif %}", "")
 
-@app.route('/predict', methods=['POST'])
-def predict():
-    text = request.form['text']
-
+@app.post("/predict", response_class=HTMLResponse)
+async def predict(text: str = Form(...)):
     # Clean the input text
     text = normalize_text(text)
 
@@ -140,8 +141,14 @@ def predict():
     logging.info(f"Predicted class: {result['label']}")
     logging.info(f"Predicted probabilities: {result['probability']}")
 
-    # Show result
-    return render_template_string(html_template, result=result)
+    # Render the result in the HTML template
+    result_html = html_template.replace("{% if result %}", "").replace("{% endif %}", "")
+    result_html = result_html.replace("{{ result['label'] }}", result['label'])
+    result_html = result_html.replace("{{ result['probability'][1] }}", str(result['probability'][1]))
+    result_html = result_html.replace("{{ result['probability'][0] }}", str(result['probability'][0]))
+
+    return result_html
 
 if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0")
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
