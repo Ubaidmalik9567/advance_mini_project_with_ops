@@ -94,11 +94,13 @@ jobs:
       # - name: Set up environment variables
       #   run: echo "DAGSHUB_PAT=${{ secrets.DAGSHUB_PAT }}" >> $GITHUB_ENV
 
-      - name: Run fastapi file
+      - name: Run FastAPI server
         env:
-            DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
+          DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
         run: |
-          uvicorn testing_fastapi_code:app --reload 
+          nohup uvicorn testing_fastapi_code:app --host 0.0.0.0 --port 8000 > fastapi.log 2>&1 &
+          sleep 10  # Allow time for the server to start
+          cat fastapi.log 
 
 
 
