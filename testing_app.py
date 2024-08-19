@@ -48,6 +48,21 @@ def normalize_text(text):
     text = lemmatization(text)
     return text
 
+dagshub_token = os.getenv("DAGSHUB_PAT")
+if not dagshub_token:
+    raise EnvironmentError("DAGSHUB_PAT environment variable is not set")
+
+os.environ["MLFLOW_TRACKING_USERNAME"] = dagshub_token
+os.environ["MLFLOW_TRACKING_PASSWORD"] = dagshub_token
+
+dagshub_url = "https://dagshub.com"
+repo_owner = "Ubaidmalik9567"
+repo_name = "mini_project_with_ops"
+
+# Set up MLflow tracking URI
+mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
+
+
 def get_latest_model_run_id(model_name, stage="Production"):
     client = mlflow.MlflowClient()
     model_versions = client.search_model_versions(f"name='{model_name}'")
