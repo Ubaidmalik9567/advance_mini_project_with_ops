@@ -62,34 +62,34 @@ jobs:
       #   run: python -m unittest model_testing/test_flask_app.py
 
       
-      - name: Log in to Docker Hub
-        if: success()
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      # - name: Log in to Docker Hub
+      #   if: success()
+      #   uses: docker/login-action@v2
+      #   with:
+      #     username: ${{ secrets.DOCKER_HUB_USERNAME }}
+      #     password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      - name: Build Docker image
-        if: success()
-        run: |
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_cicd:latest .
+      # - name: Build Docker image
+      #   if: success()
+      #   run: |
+      #     docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_cicd:latest .
 
-      - name: Push Docker image to Docker Hub
-        if: success()
-        run: |
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_cicd:latest
+      # - name: Push Docker image to Docker Hub
+      #   if: success()
+      #   run: |
+      #     docker push ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_cicd:latest
       
       # - name: Download MLflow Artifacts
       #   env:
       #     DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
       #   run: |
       #     python download_artifacts.py
-      # - name: Run Flask app
-      #   if: success()
-      #   env:
-      #     DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}  # Set environment variable for FastAPI app
-      #   run: |
-      #     python flask_app/app.py
+      - name: Run Flask app
+        if: success()
+        env:
+          DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}  # Set environment variable for FastAPI app
+        run: |
+          python flask_app/app.py
 
 
     # dckr_pat_-2GFCra820hJaFf2FJTSQoyV72M ,, docker login -u ubaidmalik1015

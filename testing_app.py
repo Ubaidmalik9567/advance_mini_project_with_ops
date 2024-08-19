@@ -49,8 +49,8 @@ def normalize_text(text):
     return text
 
 # Load model and vectorizer from files
-model_path = 'model.pkl'  # Adjust the path as needed
-vectorizer_path = 'vectorizer.pkl'  # Adjust the path as needed
+model_path = 'models/model.pkl'  # Adjust the path as needed
+vectorizer_path = 'models/vectorizer.pkl'  # Adjust the path as needed
 
 with open(model_path, 'rb') as model_file:
     model = pickle.load(model_file)
