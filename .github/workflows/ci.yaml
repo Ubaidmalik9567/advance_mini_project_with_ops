@@ -62,22 +62,22 @@ jobs:
       #   run: python -m unittest model_testing/test_flask_app.py
 
       
-      - name: Log in to Docker Hub
-        if: success()
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      # - name: Log in to Docker Hub
+      #   if: success()
+      #   uses: docker/login-action@v2
+      #   with:
+      #     username: ${{ secrets.DOCKER_HUB_USERNAME }}
+      #     password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      - name: Build Docker image
-        if: success()
-        run: |
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_ci:latest .
+      # - name: Build Docker image
+      #   if: success()
+      #   run: |
+      #     docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_ci:latest .
 
-      - name: Push Docker image to Docker Hub
-        if: success()
-        run: |
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_ci:latest
+      # - name: Push Docker image to Docker Hub
+      #   if: success()
+      #   run: |
+      #     docker push ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_ci:latest
       
       # - name: Download MLflow Artifacts
       #   env:
@@ -91,12 +91,13 @@ jobs:
       #   run: |
       #     python flask_app/app.py
 
-      # - name: Set up environment variables
-      #   run: echo "DAGSHUB_PAT=${{ secrets.DAGSHUB_PAT }}" >> $GITHUB_ENV
+      - name: Set up environment variables
+        run: echo "DAGSHUB_PAT=${{ secrets.DAGSHUB_PAT }}" >> $GITHUB_ENV
 
-      # - name: Run Flask app
-      #   run: |
-      #     python flask_app/app.py
+      - name: Run fastapi file
+        run: |
+          uvicorn fastapi:app --host 0.0.0.0 --port 8000
+ 
 
 
 
