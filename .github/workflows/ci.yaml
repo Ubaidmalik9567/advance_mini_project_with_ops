@@ -104,9 +104,9 @@ jobs:
           export MLFLOW_TRACKING_PASSWORD=$DAGSHUB_TOKEN
           
       - name: Run FastAPI application
-        # env:
-        #   DAGSHUB_USER_NAME: ${{ secrets.DAGSHUB_USER_NAME }}
-        #   DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
+        env:
+          DAGSHUB_USER_NAME: ${{ secrets.DAGSHUB_USER_NAME }}
+          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
           uvicorn testing_app:app --reload 
 
