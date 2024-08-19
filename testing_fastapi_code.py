@@ -64,7 +64,6 @@ repo_name = "mini_project_with_ops"
 # Set up MLflow tracking URI
 mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
-
 def get_latest_model_run_id(model_name, stage="Production"):
     client = mlflow.MlflowClient()
     model_versions = client.search_model_versions(f"name='{model_name}'")
