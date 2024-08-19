@@ -14,11 +14,11 @@ COPY requirements.txt /app/
 RUN pip install -r requirements.txt
 
 # Copy the rest of the application code to the working directory
-COPY testing_app.py /app/
-COPY models /app/models
+COPY flask_app/ /app/
+
 
 # Expose the port on which the app will run
 EXPOSE 8000
 
 # Command to run the application
-CMD ["uvicorn", "testing_app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--timeout", "120", "app:app"]

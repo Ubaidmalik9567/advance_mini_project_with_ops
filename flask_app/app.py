@@ -1,5 +1,5 @@
-from fastapi import FastAPI, Form
-from fastapi.responses import JSONResponse
+# that code run successfully but not load web page so temparary we use other method
+from flask import Flask, render_template, request
 import mlflow
 import pickle
 import os
@@ -9,6 +9,9 @@ import string
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import logging
+import nltk
+
+# nltk.download('stopwords')
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -46,7 +49,7 @@ def normalize_text(text):
     text = lemmatization(text)
     return text
 
-# Set up DagsHub credentials for MLflow tracking
+# Set up DagsHub credentials for MLflow tracking by using key-based authentication
 dagshub_token = os.getenv("DAGSHUB_PAT")
 if not dagshub_token:
     raise EnvironmentError("DAGSHUB_PAT environment variable is not set")
@@ -61,7 +64,7 @@ repo_name = "mini_project_with_ops"
 # Set up MLflow tracking URI
 mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
-app = FastAPI()
+app = Flask(__name__)
 
 def get_latest_model_run_id(model_name, stage="Production"):
     client = mlflow.MlflowClient()
@@ -95,31 +98,29 @@ def load_model_and_vectorizer():
 # Load model and vectorizer at startup
 model, vectorizer = load_model_and_vectorizer()
 
-@app.post("/predict")
-async def predict(text: str = Form(...)):
-    try:
-        # Clean and preprocess the input text
-        text = normalize_text(text)
+@app.route('/')
+def home():
+    return render_template('index.html', result=None)
 
-        # Vectorize the text
-        features = vectorizer.transform([text])
+@app.route('/predict', methods=['POST'])
+def predict():
+    text = request.form['text']
 
-        # Convert sparse matrix to DataFrame
-        features_df = pd.DataFrame.sparse.from_spmatrix(features)
+    # Clean the input text
+    text = normalize_text(text)
 
-        # Predict
-        result = model.predict(features_df)
+    # Vectorize the text
+    features = vectorizer.transform([text])
 
-        # Return the result as JSON
-        return JSONResponse(content={"result": result[0]})
-    except Exception as e:
-        logging.error(f"Error during prediction: {e}")
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+    # Convert sparse matrix to DataFrame
+    features_df = pd.DataFrame.sparse.from_spmatrix(features)
+    features_df = pd.DataFrame(features.toarray(), columns=[str(i) for i in range(features.shape[1])])
 
-@app.get("/")
-async def read_root():
-    return {"message": "Working fine"}
+    # Predict
+    result = model.predict(features_df)
+
+    # Show result
+    return render_template('index.html', result=result[0])
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    app.run(debug=False, host="0.0.0.0")
