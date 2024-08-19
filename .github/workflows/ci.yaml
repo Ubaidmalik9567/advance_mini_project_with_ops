@@ -34,7 +34,6 @@ jobs:
       
       - name: Download NLTK data # that occur error 
         run: |
-          python -m nltk.downloader stopwords
           python -m nltk.downloader wordnet
 
       # - name: Run DVC pipeline
@@ -85,27 +84,12 @@ jobs:
       #     DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
       #   run: |
       #     python download_artifacts.py
-
-      - name: Set DAGSHUB Environment Variables # that is other way to set env for dagshub
-        run: |
-          echo "MLFLOW_TRACKING_URI=https://dagshub.com/Ubaidmalik9567/mini_project_with_ops.mlflow" >> $GITHUB_ENV
-          echo "MLFLOW_TRACKING_USERNAME=${{ secrets.DAGSHUB_USERNAME }}" >> $GITHUB_ENV
-          echo "MLFLOW_TRACKING_PASSWORD=${{ secrets.DAGSHUB_PAT }}" >> $GITHUB_ENV
-
-      - name: Run FastAPI app
+      - name: Run Flask app
         if: success()
         env:
-          MLFLOW_TRACKING_URI: https://dagshub.com/Ubaidmalik9567/mini_project_with_ops.mlflow
-          MLFLOW_TRACKING_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
-          MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_PAT }}
+          DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}  # Set environment variable for FastAPI app
         run: |
-          nohup uvicorn app:app --host 0.0.0.0 --port 8000 &
-          sleep 5  # Allow some time for the server to start
-
-      - name: Test FastAPI app endpoint
-        run: |
-          curl -f http://localhost:8000/ || exit 1
-
+          python flask_app/app.py
 
 
     # dckr_pat_-2GFCra820hJaFf2FJTSQoyV72M ,, docker login -u ubaidmalik1015
