@@ -8,8 +8,9 @@ WORKDIR /app
 COPY requirements.txt /app/
 
 # Install dependencies
-
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt \
+    || { echo "Pip install failed"; exit 1; }
     
 # Copy the application code into the container
 COPY testing_fastapi_code.py /app/
