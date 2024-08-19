@@ -94,16 +94,21 @@ jobs:
       # - name: Set up environment variables
       #   run: echo "DAGSHUB_PAT=${{ secrets.DAGSHUB_PAT }}" >> $GITHUB_ENV
 
-      - name: Authenticate with DAGsHub
+      - name: Set up DAGsHub Authentication
         env:
           DAGSHUB_USER_NAME: ${{ secrets.DAGSHUB_USER_NAME }}
           DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
+          export DAGSHUB_USER_NAME=${{ secrets.DAGSHUB_USER_NAME }}
+          export DAGSHUB_TOKEN=${{ secrets.DAGSHUB_TOKEN }}
           echo "machine dagshub.com login $DAGSHUB_USER_NAME password $DAGSHUB_TOKEN" >> ~/.netrc
 
-      - name: Run FastAPI application tests
+      - name: Run FastAPI application
+        env:
+          DAGSHUB_USER_NAME: ${{ secrets.DAGSHUB_USER_NAME }}
+          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
-          uvicorn testing_app:app --reload
+          uvicorn testing_app:app --reload 
 
     # dckr_pat_-2GFCra820hJaFf2FJTSQoyV72M ,, docker login -u ubaidmalik1015
     # docker run -p 8000:5000 -e DAGSHUB_PAT=77eb2325e588197f499b992a77be41a6bc3f4abf mini_project_with_ops:self_build
