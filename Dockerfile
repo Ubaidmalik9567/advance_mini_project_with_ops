@@ -10,7 +10,7 @@ COPY requirements.txt /app/
 # Install dependencies
 
 RUN pip install -r requirements.txt
-RUN python -m nltk.downloader stopwords
+RUN python -m nltk.downloader stopwords wordnet
 
 # Copy the application code into the container
 COPY testing_fastapi_code.py /app/
