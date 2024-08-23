@@ -4,5 +4,6 @@ pydantic
 pandas
 scikit-learn
 nltk
+python-multipart
 mlflow
 dagshub
