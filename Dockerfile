@@ -13,9 +13,14 @@ RUN pip install -r requirements.txt
     
 # Copy the application code into the container
 COPY testing_fastapi_code.py /app/
+# COPY model.pkl /app/
+# COPY vectorizer.pkl /app/
+
 
 # Expose the port on which the FastAPI application will run
 EXPOSE 8000
 
 # Command to run the FastAPI application
-CMD ["uvicorn", "testing_fastapi_code:app", "--host", "0.0.0.0", "--port", "8000"]
+# CMD ["uvicorn", "testing_app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "testing_fastapi_code:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
