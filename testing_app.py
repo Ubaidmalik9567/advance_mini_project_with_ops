@@ -98,3 +98,4 @@ async def read_root():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000) # use this for running: uvicorn testing_app:app --reload
+    # when run docker image then always use this http://localhost:8000 not click on provided link
