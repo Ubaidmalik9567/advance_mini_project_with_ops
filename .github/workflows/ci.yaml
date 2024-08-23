@@ -72,12 +72,12 @@ jobs:
       - name: Build Docker image
         if: success()
         run: |
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_ci:latest .
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_cicd:latest .
 
       - name: Push Docker image to Docker Hub
         if: success()
         run: |
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_ci:latest
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_cicd:latest
       
       # - name: Download MLflow Artifacts
       #   env:
