@@ -14,10 +14,10 @@ RUN python -m nltk.downloader stopwords
 
     
 # Copy the application code into the container
-COPY app.py /app/
+COPY testing_fastapi_code.py /app/
 
 # Expose the port on which the FastAPI application will run
 EXPOSE 8000
 
 # Command to run the FastAPI application
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "testing_fastapi_code:app", "--host", "0.0.0.0", "--port", "8000"]
