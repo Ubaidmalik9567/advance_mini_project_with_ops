@@ -72,24 +72,41 @@ jobs:
       # - name: Build Docker image
       #   if: success()
       #   run: |
-      #     docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_ci_fastapifile:latest .
+      #     docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_ci_fastapifile:latest . # add image name which have
 
       # - name: Push Docker image to Docker Hub
       #   if: success()
       #   run: |
       #     docker push ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_ci_fastapifile:latest
+
+
+      - name: Deploy Image Docker Hub to EC2
+        if: success()
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_ci_fastapifile:latest
+            docker stop my-app || true
+            docker rm my-app || true
+            docker run -p 8000:8000 --name my-app \
+            -e DAGSHUB_PAT=${{ secrets.DAGSHUB_PAT }} \
+            ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_ci_fastapifile:latest
+
       
       # - name: Download MLflow Artifacts
       #   env:
       #     DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
       #   run: |
       #     python download_artifacts.py
-      - name: Run Flask app
-        if: success()
-        env:
-          DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}  # Set environment variable for FastAPI app
-        run: |
-          python flask_app/app.py
+      # - name: Run Flask app
+      #   if: success()
+      #   env:
+      #     DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}  # Set environment variable for FastAPI app
+      #   run: |
+      #     python flask_app/app.py
 
       # - name: Set up environment variables
       #   run: echo "DAGSHUB_PAT=${{ secrets.DAGSHUB_PAT }}" >> $GITHUB_ENV
