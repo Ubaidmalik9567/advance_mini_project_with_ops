@@ -13,7 +13,7 @@ RUN pip install -r requirements.txt
 RUN python -m nltk.downloader stopwords wordnet
 
 # Copy the application code into the container
-COPY testing_app.py /app/
+COPY testing_fastapi_code.py /app/
 # COPY model.pkl /app/
 # COPY vectorizer.pkl /app/
 
