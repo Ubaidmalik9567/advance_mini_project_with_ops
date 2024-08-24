@@ -72,12 +72,12 @@ jobs:
       - name: Build Docker image
         if: success()
         run: |
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_ci_fastapifile:latest . # add image name which have
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_ci:latest . # add image name which have
 
       - name: Push Docker image to Docker Hub
         if: success()
         run: |
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_ci_fastapifile:latest
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_ci:latest
 
 
       - name: Deploy Image Docker Hub to EC2
@@ -88,12 +88,12 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_ci_fastapifile:latest
+            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_ci:latest
             docker stop my-app || true
             docker rm my-app || true
             docker run -p 8000:8000 --name my-app \
             -e DAGSHUB_PAT=${{ secrets.DAGSHUB_PAT }} \
-            ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_ci_fastapifile:latest
+            ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_ci:latest
 
       
       # - name: Download MLflow Artifacts
@@ -116,7 +116,6 @@ jobs:
       #       DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
       #   run: |
       #     uvicorn testing_fastapi_code:app --reload 
-
 
 
     # dckr_pat_-2GFCra820hJaFf2FJTSQoyV72M ,, docker login -u ubaidmalik1015
