@@ -8,7 +8,7 @@ WORKDIR /app
 COPY requirements.txt /app/
 
 # Install dependencies
-
+RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 RUN python -m nltk.downloader stopwords wordnet
 
