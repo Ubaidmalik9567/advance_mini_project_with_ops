@@ -127,8 +127,7 @@ jobs:
             docker stop my-app || true
             docker rm my-app || true
             docker run -d -p 8000:8000 -e DAGSHUB_PAT=${{ secrets.DAGSHUB_PAT }} --name my-app 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_ecr_ecr2ec2:latest
-
-
+    
       # - name: Download MLflow Artifacts
       #   env:
       #     DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
