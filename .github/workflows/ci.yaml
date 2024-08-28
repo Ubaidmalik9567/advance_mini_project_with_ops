@@ -96,37 +96,37 @@ jobs:
       #       ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_ci:latest
 
       # Login to AWS ECR and push image to ECR that 4 step
-      # - name: Login to AWS ECR 
-      #   run: |
-      #     aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 730335254649.dkr.ecr.eu-north-1.amazonaws.com
-      # - name: Build Docker image
-      #   run: |    
-      #     docker build -t docker_ecr_ecr2ec2 .
-      # - name: Tag Docker image
-      #   run: |
-      #     docker tag docker_ecr_ecr2ec2:latest 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_ecr_ecr2ec2:latest
-      # - name: Push Docker image to AWS ECR
-      #   run: |    
-      #     docker push 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_ecr_ecr2ec2:latest
+      - name: Login to AWS ECR 
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 730335254649.dkr.ecr.eu-north-1.amazonaws.com
+      - name: Build Docker image
+        run: |    
+          docker build -t docker_ecr_ecr2ec2 .
+      - name: Tag Docker image
+        run: |
+          docker tag docker_ecr_ecr2ec2:latest 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_ecr_ecr2ec2:latest
+      - name: Push Docker image to AWS ECR
+        run: |    
+          docker push 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_ecr_ecr2ec2:latest
           
-      - name: Pull image to ECR & Deploy image to EC2
-        if: success()
-        uses: appleboy/ssh-action@v0.1.5
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-            aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            aws configure set default.region eu-north-1
-            aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 730335254649.dkr.ecr.eu-north-1.amazonaws.com
-            docker pull 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_ecr_ecr2ec2:latest
-            docker stop my-app || true
-            docker rm my-app || true
-            docker run -d -p 8000:8000 -e DAGSHUB_PAT=${{ secrets.DAGSHUB_PAT }} --name my-app 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_ecr_ecr2ec2:latest
+      # - name: Pull image to ECR & Deploy image to EC2
+      #   if: success()
+      #   uses: appleboy/ssh-action@v0.1.5
+      #   with:
+      #     host: ${{ secrets.EC2_HOST }}
+      #     username: ${{ secrets.EC2_USER }}
+      #     key: ${{ secrets.EC2_SSH_KEY }}
+      #     script: |
+      #       aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #       aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #       aws configure set default.region eu-north-1
+      #       aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 730335254649.dkr.ecr.eu-north-1.amazonaws.com
+      #       docker pull 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_ecr_ecr2ec2:latest
+      #       docker stop my-app || true
+      #       docker rm my-app || true
+      #       docker run -d -p 8000:8000 -e DAGSHUB_PAT=${{ secrets.DAGSHUB_PAT }} --name my-app 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_ecr_ecr2ec2:latest
     
       # - name: Download MLflow Artifacts
       #   env:
