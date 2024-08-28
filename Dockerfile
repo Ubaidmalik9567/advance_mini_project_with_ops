@@ -1,32 +1,33 @@
-# Use a smaller base image
-FROM python:3.10-slim AS builder
+# Stage 1: Build Stage
+FROM python:3.10 AS build
 
 # Set the working directory in the container
 WORKDIR /app
 
-# Install build dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    libpq-dev
-
-# Upgrade pip and install the dependencies
+# Copy the requirements.txt file from the flask_app folder
 COPY requirements.txt /app/
-RUN pip install --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt \
-    && python -m nltk.downloader stopwords wordnet
 
-# Clean up unnecessary files and packages to reduce image size
-RUN apt-get purge -y --auto-remove gcc libpq-dev \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy only necessary files into the container
+# Copy the application code and model files
 COPY testing_fastapi_code.py /app/
 # COPY model.pkl /app/
 # COPY vectorizer.pkl /app/
 
-# Expose the port on which the FastAPI application will run
+# Download only the necessary NLTK data
+RUN python -m nltk.downloader stopwords wordnet
+
+# Stage 2: Final Stage
+FROM python:3.10-slim AS final
+
+WORKDIR /app
+
+# Copy only the necessary files from the build stage
+COPY --from=build /app /app
+
+# Expose the application port
 EXPOSE 8000
 
-# Command to run the FastAPI application
+# Set the command to run the application
 CMD ["uvicorn", "testing_fastapi_code:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
