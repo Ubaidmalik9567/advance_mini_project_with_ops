@@ -1,61 +1,61 @@
 stages:
-#   make_dataset:
-#     cmd: python ./src/data/make_dataset.py /data/raw
-#     deps:
-#     - ./src/data/make_dataset.py
-#     outs:
-#     - ./data/raw/raw.csv
-#   data_transformation:
-#       cmd: python ./src/data/data_transformation.py /data
-#       deps:
-#       - ./src/data/make_dataset.py
-#       - ./data/raw/raw.csv
-#       params:
-#       - data_transformation.split_dataset_size
-#       - data_transformation.seed
-#       outs:
-#       - ./data/interim/preprocess_traindata.csv
-#       - ./data/interim/preprocess_testdata.csv
-#   build_features:
-#       cmd: python ./src/features/build_features.py /data
-#       deps:
-#       - ./src/features/build_features.py
-#       - ./data/interim/preprocess_traindata.csv
-#       - ./data/interim/preprocess_testdata.csv
-#       params:
-#       - build_features.max_features
-#       outs:
-#       - ./data/processed/processed_traindata.csv
-#       - ./data/processed/processed_testdata.csv
-#       - ./models/vectorizer.pkl
+  make_dataset:
+    cmd: python ./src/data/make_dataset.py /data/raw
+    deps:
+    - ./src/data/make_dataset.py
+    outs:
+    - ./data/raw/raw.csv
+  data_transformation:
+      cmd: python ./src/data/data_transformation.py /data
+      deps:
+      - ./src/data/make_dataset.py
+      - ./data/raw/raw.csv
+      params:
+      - data_transformation.split_dataset_size
+      - data_transformation.seed
+      outs:
+      - ./data/interim/preprocess_traindata.csv
+      - ./data/interim/preprocess_testdata.csv
+  build_features:
+      cmd: python ./src/features/build_features.py /data
+      deps:
+      - ./src/features/build_features.py
+      - ./data/interim/preprocess_traindata.csv
+      - ./data/interim/preprocess_testdata.csv
+      params:
+      - build_features.max_features
+      outs:
+      - ./data/processed/processed_traindata.csv
+      - ./data/processed/processed_testdata.csv
+      - ./models/vectorizer.pkl
 
-#   train_model:
-#     cmd: python ./src/models/train_model.py /data/processed 
-#     deps:
-#     - ./src/models/train_model.py 
-#     - ./data/processed/processed_traindata.csv
-#     params:
-#     - train_model.C
-#     - train_model.solver
-#     - train_model.penalty
-#     outs:
-#     - ./models/model.pkl
+  train_model:
+    cmd: python ./src/models/train_model.py /data/processed 
+    deps:
+    - ./src/models/train_model.py 
+    - ./data/processed/processed_traindata.csv
+    params:
+    - train_model.C
+    - train_model.solver
+    - train_model.penalty
+    outs:
+    - ./models/model.pkl
   
-#   predict_model:
-#     cmd: python ./src/models/predict_model.py /data/processed 
-#     deps:
-#     - ./src/models/predict_model.py
-#     - ./data/processed/processed_testdata.csv
-#     - ./models/model.pkl
-#     outs:
-#     - ./reports/metrics.json
-#     - ./reports/model_experiment_info.json  # Add the model_experiment_info.json file as an output
+  predict_model:
+    cmd: python ./src/models/predict_model.py /data/processed 
+    deps:
+    - ./src/models/predict_model.py
+    - ./data/processed/processed_testdata.csv
+    - ./models/model.pkl
+    outs:
+    - ./reports/metrics.json
+    - ./reports/model_experiment_info.json  # Add the model_experiment_info.json file as an output
   
-#   register_model:
-#     cmd: python ./src/models/register_model.py
-#     deps:
-#     - ./reports/model_experiment_info.json
-#     - ./src/models/register_model.py
+  register_model:
+    cmd: python ./src/models/register_model.py
+    deps:
+    - ./reports/model_experiment_info.json
+    - ./src/models/register_model.py
   
   promote_model:
     cmd: python ./src/models/promote_model.py
