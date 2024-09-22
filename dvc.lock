@@ -5,24 +5,24 @@ stages:
     deps:
     - path: ./src/data/make_dataset.py
       hash: md5
-      md5: de097e66aa2e77cb6a305a5c59b6108d
-      size: 1459
+      md5: c897b98c6230b30f647f86ae83f33158
+      size: 1414
     outs:
     - path: ./data/raw/raw.csv
       hash: md5
-      md5: 378e50a49c97277f1841a684687c2020
-      size: 3768210
+      md5: 04eeb2b73cbfbbb4a534113af3f5b3a4
+      size: 3728209
   data_transformation:
     cmd: python ./src/data/data_transformation.py /data
     deps:
     - path: ./data/raw/raw.csv
       hash: md5
-      md5: 378e50a49c97277f1841a684687c2020
-      size: 3768210
+      md5: 04eeb2b73cbfbbb4a534113af3f5b3a4
+      size: 3728209
     - path: ./src/data/make_dataset.py
       hash: md5
-      md5: de097e66aa2e77cb6a305a5c59b6108d
-      size: 1459
+      md5: c897b98c6230b30f647f86ae83f33158
+      size: 1414
     params:
       params.yaml:
         data_transformation.seed: 45
@@ -30,54 +30,54 @@ stages:
     outs:
     - path: ./data/interim/preprocess_testdata.csv
       hash: md5
-      md5: 24211be392ffa035514a67912df5ae20
-      size: 189301
+      md5: ce8cf78d16fba810fb9b96eed7dcdc2d
+      size: 185932
     - path: ./data/interim/preprocess_traindata.csv
       hash: md5
-      md5: ed5e51d491a10d15f784f4c3ce84a13a
-      size: 383185
+      md5: 21601068db6e6a24b5ce41fb07cde982
+      size: 376325
   build_features:
     cmd: python ./src/features/build_features.py /data
     deps:
     - path: ./data/interim/preprocess_testdata.csv
       hash: md5
-      md5: 24211be392ffa035514a67912df5ae20
-      size: 189301
+      md5: ce8cf78d16fba810fb9b96eed7dcdc2d
+      size: 185932
     - path: ./data/interim/preprocess_traindata.csv
       hash: md5
-      md5: ed5e51d491a10d15f784f4c3ce84a13a
-      size: 383185
+      md5: 21601068db6e6a24b5ce41fb07cde982
+      size: 376325
     - path: ./src/features/build_features.py
       hash: md5
-      md5: 5bc71ba4b91372a79f61b14045ecb840
-      size: 3593
+      md5: 24ee5c5c47bcd93820452731ae6d4e3e
+      size: 3501
     params:
       params.yaml:
-        build_features.max_features: 2000
+        build_features.max_features: 2800
     outs:
     - path: ./data/processed/processed_testdata.csv
       hash: md5
-      md5: bf6775b22a55749e39ded63e192d0061
-      size: 27722881
+      md5: fafcbce60630755820c49de501b2ad1c
+      size: 38694236
     - path: ./data/processed/processed_traindata.csv
       hash: md5
-      md5: 99b6c054541868a82cb9c4b5e6752190
-      size: 56288342
+      md5: d6eebc49b3b4caa23b294cabaad57165
+      size: 78559816
     - path: ./models/vectorizer.pkl
       hash: md5
-      md5: dae6a46267b4ddb647aa054374f59363
-      size: 63291
+      md5: 1076e9011d49bddf816916ee64a8ef5c
+      size: 99966
   train_model:
     cmd: python ./src/models/train_model.py /data/processed
     deps:
     - path: ./data/processed/processed_traindata.csv
       hash: md5
-      md5: 99b6c054541868a82cb9c4b5e6752190
-      size: 56288342
+      md5: d6eebc49b3b4caa23b294cabaad57165
+      size: 78559816
     - path: ./src/models/train_model.py
       hash: md5
-      md5: 4035bf0ec59d75b32ea2ffa7d8bfa6b0
-      size: 2459
+      md5: d0341c4f23d537e45ed596f3ee5aea87
+      size: 2388
     params:
       params.yaml:
         train_model.C: 1
@@ -86,8 +86,8 @@ stages:
     outs:
     - path: ./models/model.pkl
       hash: md5
-      md5: cb3528c9c1710bb4718fdfff2fa5f1af
-      size: 29705
+      md5: ee29a0ffc72938a528c294111cdc2bb7
+      size: 41707
   predict_model:
     cmd: python ./src/models/predict_model.py /data/processed
     deps:
