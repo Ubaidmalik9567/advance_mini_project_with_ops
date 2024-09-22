@@ -36,11 +36,11 @@ jobs:
         run: |
           python -m nltk.downloader wordnet
 
-      - name: Run DVC pipeline
-        env:
-          DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
-        run: |
-          dvc repro
+      # - name: Run DVC pipeline
+      #   env:
+      #     DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
+      #   run: |
+      #     dvc repro
     
       
       # - name: Run model testing stages # that code just test our model
@@ -133,12 +133,12 @@ jobs:
       #     DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
       #   run: |
       #     python download_artifacts.py
-      # - name: Run Flask app
-      #   if: success()
-      #   env:
-      #     DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}  # Set environment variable for FastAPI app
-      #   run: |
-      #     python flask_app/app.py
+      - name: Run Flask app
+        if: success()
+        env:
+          DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}  # Set environment variable for FastAPI app
+        run: |
+          python flask_app/app.py
 
       # - name: Set up environment variables
       #   run: echo "DAGSHUB_PAT=${{ secrets.DAGSHUB_PAT }}" >> $GITHUB_ENV
