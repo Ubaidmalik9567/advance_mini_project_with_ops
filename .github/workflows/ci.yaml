@@ -96,20 +96,20 @@ jobs:
       #       ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_ci:latest
 
       # Login to AWS ECR and push image to ECR that 4 step
-      - name: Login to AWS ECR 
-        run: |
-          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 730335254649.dkr.ecr.eu-north-1.amazonaws.com
-      - name: Build Docker image
-        run: |    
-          docker build -t docker_ecr_ecr2ec2 .
-      - name: Tag Docker image
-        run: |
-          docker tag docker_ecr_ecr2ec2:latest 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_ecr_ecr2ec2:latest
-      - name: Push Docker image to AWS ECR
-        run: |    
-          docker push 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_ecr_ecr2ec2:latest
+      # - name: Login to AWS ECR 
+      #   run: |
+      #     aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 730335254649.dkr.ecr.eu-north-1.amazonaws.com
+      # - name: Build Docker image
+      #   run: |    
+      #     docker build -t docker_ecr_ecr2ec2 .
+      # - name: Tag Docker image
+      #   run: |
+      #     docker tag docker_ecr_ecr2ec2:latest 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_ecr_ecr2ec2:latest
+      # - name: Push Docker image to AWS ECR
+      #   run: |    
+      #     docker push 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_ecr_ecr2ec2:latest
           
       # - name: Pull image to ECR & Deploy image to EC2
       #   if: success()
