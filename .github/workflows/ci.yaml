@@ -69,22 +69,17 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }} # ubaidmalik1015
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }} # dckr_pat_4VOtpmcHPYQjjELQ-q5R9xcuwrU
 
-      # - name: Build Docker image
-      #   if: success()
-      #   run: |
-      #     docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_cicd:latest . # add image name which have
-
-      # - name: Push Docker image to Docker Hub
-      #   if: success()
-      #   run: |
-      #     docker push ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_cicd:latest
-
-      - name: Run Docker container
+      - name: Build Docker image
         if: success()
         run: |
-          docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_cicd:latest
-          docker run -d 8000:8000 -e DAGSHUB_PAT=${{ secrets.DAGSHUB_PAT }} emotion_cicd:latest
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_cicd:latest . # add image name which have
 
+      - name: Push Docker image to Docker Hub
+        if: success()
+        run: |
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_cicd:latest
+
+  
 
 
 
@@ -151,11 +146,11 @@ jobs:
       # - name: Set up environment variables
       #   run: echo "DAGSHUB_PAT=${{ secrets.DAGSHUB_PAT }}" >> $GITHUB_ENV
 
-      # - name: Run fastapi file
-      #   env:
-      #       DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
-      #   run: |
-      #     uvicorn testing_fastapi_code:app --reload 
+      - name: Run fastapi file
+        env:
+            DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
+        run: |
+          uvicorn testing_fastapi_code:app --reload 
 
 
     # dckr_pat_-2GFCra820hJaFf2FJTSQoyV72M ,, docker login -u ubaidmalik1015
