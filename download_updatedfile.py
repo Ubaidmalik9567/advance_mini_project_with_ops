@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 def setup_mlflow_tracking():
     dagshub.init(repo_owner='Ubaidmalik9567', repo_name='mini_project_with_ops', mlflow=True)
-    mlflow.set_tracking_uri("https://dagshub.com/Ubaidmalik9567/mini_project_with_ops.mlflow")
+    mlflow.set_tracking_uri("https://dagshub.com/Ubaidmalik9567/advance_mini_project_with_ops.mlflow")
 
 def get_latest_model_version(model_name, stage):
     client = MlflowClient()

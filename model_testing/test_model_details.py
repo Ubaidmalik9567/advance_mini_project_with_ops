@@ -23,7 +23,7 @@ class TestModelLoading(unittest.TestCase):
 
         dagshub_url = "https://dagshub.com"
         repo_owner = "Ubaidmalik9567"
-        repo_name = "mini_project_with_ops"
+        repo_name = "advance_mini_project_with_ops"
 
         # Set up MLflow tracking URI
         mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
