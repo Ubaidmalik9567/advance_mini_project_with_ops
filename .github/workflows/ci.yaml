@@ -36,11 +36,11 @@ jobs:
         run: |
           python -m nltk.downloader wordnet
 
-      # - name: Run DVC pipeline
-      #   env:
-      #     DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
-      #   run: |
-      #     dvc repro
+      - name: Run DVC pipeline
+        env:
+          DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
+        run: |
+          dvc repro
     
       
       # - name: Run model testing stages # that code just test our model
@@ -62,22 +62,22 @@ jobs:
       #   run: python -m unittest model_testing/test_flask_app.py
 
       
-      - name: Log in to Docker Hub
-        if: success()
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }} # ubaidmalik1015
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }} # dckr_pat_4VOtpmcHPYQjjELQ-q5R9xcuwrU
+      # - name: Log in to Docker Hub
+      #   if: success()
+      #   uses: docker/login-action@v2
+      #   with:
+      #     username: ${{ secrets.DOCKER_HUB_USERNAME }} # ubaidmalik1015
+      #     password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }} # dckr_pat_4VOtpmcHPYQjjELQ-q5R9xcuwrU
 
-      - name: Build Docker image
-        if: success()
-        run: |
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_cicd:latest . # add image name which have
+      # - name: Build Docker image
+      #   if: success()
+      #   run: |
+      #     docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_cicd:latest . # add image name which have
 
-      - name: Push Docker image to Docker Hub
-        if: success()
-        run: |
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_cicd:latest
+      # - name: Push Docker image to Docker Hub
+      #   if: success()
+      #   run: |
+      #     docker push ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_cicd:latest
 
   
 
@@ -99,37 +99,37 @@ jobs:
       #       ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_ci:latest
 
       # Login to AWS ECR and push image to ECR that 4 step
-      # - name: Login to AWS ECR 
-      #   run: |
-      #     aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 730335254649.dkr.ecr.eu-north-1.amazonaws.com
-      # - name: Build Docker image
-      #   run: |    
-      #     docker build -t docker_ecr_ecr2ec2 .
-      # - name: Tag Docker image
-      #   run: |
-      #     docker tag docker_ecr_ecr2ec2:latest 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_ecr_ecr2ec2:latest
-      # - name: Push Docker image to AWS ECR
-      #   run: |    
-      #     docker push 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_ecr_ecr2ec2:latest
+      - name: Login to AWS ECR 
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 730335254649.dkr.ecr.eu-north-1.amazonaws.com
+      - name: Build Docker image
+        run: |    
+          docker build -t docker_image_ecr2ec2 .
+      - name: Tag Docker image
+        run: |
+          docker tag docker_image_ecr2ec2:latest 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_image_ecr2ec2:latest
+      - name: Push Docker image to AWS ECR
+        run: |    
+          docker push 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_image_ecr2ec2:latest
           
-      # - name: Pull image to ECR & Deploy image to EC2
-      #   if: success()
-      #   uses: appleboy/ssh-action@v0.1.5
-      #   with:
-      #     host: ${{ secrets.EC2_HOST }}
-      #     username: ${{ secrets.EC2_USER }}
-      #     key: ${{ secrets.EC2_SSH_KEY }}
-      #     script: |
-      #       aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #       aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #       aws configure set default.region eu-north-1
-      #       aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 730335254649.dkr.ecr.eu-north-1.amazonaws.com
-      #       docker pull 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_ecr_ecr2ec2:latest
-      #       docker stop my-app || true
-      #       docker rm my-app || true
-      #       docker run -d -p 8000:8000 -e DAGSHUB_PAT=${{ secrets.DAGSHUB_PAT }} --name my-app 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_ecr_ecr2ec2:latest
+      - name: Pull image to ECR & Deploy image to EC2
+        if: success()
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+            aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            aws configure set default.region eu-north-1
+            aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 730335254649.dkr.ecr.eu-north-1.amazonaws.com
+            docker pull 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_image_ecr2ec2:latest
+            docker stop my-app || true
+            docker rm my-app || true
+            docker run -d -p 8000:8000 -e DAGSHUB_PAT=${{ secrets.DAGSHUB_PAT }} --name my-app 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_image_ecr2ec2:latest
     
       # - name: Download MLflow Artifacts
       #   env:
@@ -146,12 +146,13 @@ jobs:
       # - name: Set up environment variables
       #   run: echo "DAGSHUB_PAT=${{ secrets.DAGSHUB_PAT }}" >> $GITHUB_ENV
 
-      - name: Run fastapi file
-        env:
-            DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
-        run: |
-          uvicorn testing_fastapi_code:app --reload 
+      # - name: Run fastapi file
+      #   env:
+      #       DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
+      #   run: |
+      #     uvicorn testing_fastapi_code:app --reload 
 
 
     # dckr_pat_-2GFCra820hJaFf2FJTSQoyV72M ,, docker login -u ubaidmalik1015
     # docker run -p 8000:5000 -e DAGSHUB_PAT=77eb2325e588197f499b992a77be41a6bc3f4abf mini_project_with_ops:self_build
+    # Access key ID: AKIA2UC27TB4R7I23NEY  Secret access key: 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
