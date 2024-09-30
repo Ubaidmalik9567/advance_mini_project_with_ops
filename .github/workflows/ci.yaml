@@ -99,20 +99,20 @@ jobs:
       #       ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_ci:latest
 
       # Login to AWS ECR and push image to ECR that 4 step
-      # - name: Login to AWS ECR 
-      #   run: |
-      #     aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 730335254649.dkr.ecr.eu-north-1.amazonaws.com
-      # - name: Build Docker image
-      #   run: |    
-      #     docker build -t docker_image_ecr2ec2 .
-      # - name: Tag Docker image
-      #   run: |
-      #     docker tag docker_image_ecr2ec2:latest 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_image_ecr2ec2:latest
-      # - name: Push Docker image to AWS ECR
-      #   run: |    
-      #     docker push 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_image_ecr2ec2:latest
+      - name: Login to AWS ECR 
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 730335254649.dkr.ecr.eu-north-1.amazonaws.com
+      - name: Build Docker image
+        run: |    
+          docker build -t docker_image_ecr2ec2 .
+      - name: Tag Docker image
+        run: |
+          docker tag docker_image_ecr2ec2:latest 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_image_ecr2ec2:latest
+      - name: Push Docker image to AWS ECR
+        run: |    
+          docker push 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_image_ecr2ec2:latest
           
       # - name: Pull image to ECR & Deploy image to EC2
       #   if: success()
@@ -146,13 +146,34 @@ jobs:
       # - name: Set up environment variables
       #   run: echo "DAGSHUB_PAT=${{ secrets.DAGSHUB_PAT }}" >> $GITHUB_ENV
 
-      - name: Run fastapi file
-        env:
-            DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
-        run: |
-          uvicorn testing_fastapi_code:app --reload 
+      # - name: Run fastapi file
+      #   env:
+      #       DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
+      #   run: |
+      #     uvicorn testing_fastapi_code:app --reload 
 
 
     # dckr_pat_-2GFCra820hJaFf2FJTSQoyV72M ,, docker login -u ubaidmalik1015
     # docker run -p 8000:5000 -e DAGSHUB_PAT=77eb2325e588197f499b992a77be41a6bc3f4abf mini_project_with_ops:self_build
     # Access key ID: AKIA2UC27TB4R7I23NEY  Secret access key: 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
+   
+    # docker run -p 8000:8000 -e DAGSHUB_PAT=c6ea9f2beb523e479f6f8150da41c0535c1f50d1 
+
+
+
+
+# that code use for make a copy instance on aws
+# #!/bin/bash
+
+# # Ensure Docker is running
+# sudo systemctl start docker
+
+# # Check if the container is already running or exists
+# if [ "$(sudo docker ps -aq -f name=my-app)" ]; then
+#     # Stop and remove the existing container
+#     sudo docker stop my-app
+#     sudo docker rm my-app
+# fi
+
+# # Run the Docker container
+# sudo docker run -d -p 8000:8000 -e DAGSHUB_PAT=c6ea9f2beb523e479f6f8150da41c0535c1f50d1 --name my-app 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_image_ecr2ec2:latest
