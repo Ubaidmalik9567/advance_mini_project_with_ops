@@ -3,7 +3,7 @@
 
 #!/bin/bash
 
-# Ensure that the script runs in non-interactive mode
+# Ensure that this script runs in non-interactive mode
 export DEBIAN_FRONTEND=noninteractive
 
 # Update the package lists
