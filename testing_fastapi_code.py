@@ -129,7 +129,7 @@ async def predict(text: str = Form(...)):
 
 @app.get("/")
 async def read_root():
-    return {"message": "Working fine"}
+    return {"message": "Working good & fine"}
 
 if __name__ == "__main__":
     import uvicorn
