@@ -1,0 +1,27 @@
+apiVersion: machinelearning.seldon.io/v1
+kind: SeldonDeployment
+metadata:
+  name: advance-mini-project-with-ops 
+spec:
+  name: advance-mini-project-with-ops 
+  predictors:
+  - componentSpecs:
+    - spec:
+        containers:
+        - name: advance-mini-project-with-ops 
+          image: buildit:latest
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "200m"
+          ports:
+          - containerPort: 8080
+            name: http
+    graph:
+      children: []
+      endpoint:
+        type: REST
+      name: advance-mini-project-with-ops 
+      type: MODEL
+    name: advance-mini-project-with-ops 
+    replicas: 1

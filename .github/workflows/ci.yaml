@@ -214,3 +214,9 @@ jobs:
 
 # # Run the Docker container
 # sudo docker run -d -p 8000:8000 -e DAGSHUB_PAT=c6ea9f2beb523e479f6f8150da41c0535c1f50d1 --name my-app 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_image_ecr2ec2:latest
+
+
+
+# this run manually 
+# docker run -p 8000:8000 -e DAGSHUB_PAT=c6ea9f2beb523e479f6f8150da41c0535c1f50d1 image_name:with_tag
+# like docker run -p 8000:8000 -e DAGSHUB_PAT=c6ea9f2beb523e479f6f8150da41c0535c1f50d1 buildit:latest

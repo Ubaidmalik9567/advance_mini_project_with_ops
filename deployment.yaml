@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: advance-mini-project-with-ops
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: advance-mini-project-with-ops  
+  template:
+    metadata:
+      labels:
+        app: advance-mini-project-with-ops 
+    spec:
+      containers:
+      - name: advance-mini-project-with-ops  
+        image: buildit:latest
+        imagePullPolicy: Never  # This will ensure the image is used from the local environment
+        env:
+        - name: DAGSHUB_PAT
+          value: "c6ea9f2beb523e479f6f8150da41c0535c1f50d1"
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 8000
