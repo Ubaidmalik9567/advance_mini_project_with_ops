@@ -42,7 +42,10 @@ jobs:
       #   run: |
       #     dvc repro
     
-      
+      - name: Install test dependencies
+        run: |
+          pip install pytest
+          
       - name: Run model testing stages # that code just test our model
         env:
           DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
