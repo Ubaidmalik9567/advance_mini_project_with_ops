@@ -32,28 +32,28 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r dev_requirements.txt
       
-      - name: Download NLTK data # that occur error 
-        run: |
-          python -m nltk.downloader wordnet
+      # - name: Download NLTK data # that occur error 
+      #   run: |
+      #     python -m nltk.downloader wordnet
 
-      - name: Run DVC pipeline
-        env:
-          DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
-        run: |
-          dvc repro
-    
-      
-      # - name: Run model testing stages # that code just test our model
+      # - name: Run DVC pipeline
       #   env:
       #     DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
       #   run: |
-      #     python -m unittest model_testing/test_model_details.py
+      #     dvc repro
+    
       
-      - name: promote model to production
-        if: success() # that check if just previous command condition run sucessfully then run this command 
+      - name: Run model testing stages # that code just test our model
         env:
           DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
-        run: python src/models/promote_model.py
+        run: |
+          python -m unittest model_testing/test_model_details.py
+      
+      # - name: promote model to production
+      #   if: success() # that check if just previous command condition run sucessfully then run this command 
+      #   env:
+      #     DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
+      #   run: python src/models/promote_model.py
 
       # - name: Testing Flask app
       #   if: success()  
@@ -99,20 +99,20 @@ jobs:
       #       ${{ secrets.DOCKER_HUB_USERNAME }}/emotion_ci:latest
 
       # Login to AWS ECR and push image to ECR that 4 step
-      - name: Login to AWS ECR 
-        run: |
-          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 730335254649.dkr.ecr.eu-north-1.amazonaws.com
-      - name: Build Docker image
-        run: |    
-          docker build -t docker_image_ecr2ec2 .
-      - name: Tag Docker image
-        run: |
-          docker tag docker_image_ecr2ec2:latest 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_image_ecr2ec2:latest
-      - name: Push Docker image to AWS ECR
-        run: |    
-          docker push 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_image_ecr2ec2:latest
+      # - name: Login to AWS ECR 
+      #   run: |
+      #     aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 730335254649.dkr.ecr.eu-north-1.amazonaws.com
+      # - name: Build Docker image
+      #   run: |    
+      #     docker build -t docker_image_ecr2ec2 .
+      # - name: Tag Docker image
+      #   run: |
+      #     docker tag docker_image_ecr2ec2:latest 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_image_ecr2ec2:latest
+      # - name: Push Docker image to AWS ECR
+      #   run: |    
+      #     docker push 730335254649.dkr.ecr.eu-north-1.amazonaws.com/docker_image_ecr2ec2:latest
           
       # - name: Pull image to ECR & Deploy image to EC2
       #   if: success()
@@ -161,30 +161,30 @@ jobs:
 
 
     # Zip the required files
-      - name: Zip files for deployment
-        if: success()
-        run: |
-          zip -r deployment.zip appspec.yml deploy/scripts/install_dependencies.sh deploy/scripts/start_docker.sh
+      # - name: Zip files for deployment
+      #   if: success()
+      #   run: |
+      #     zip -r deployment.zip appspec.yml deploy/scripts/install_dependencies.sh deploy/scripts/start_docker.sh
 
-      # Upload the ZIP file to S3     change bucket name according to you
-      - name: Upload ZIP to S3
-        if: success()
-        run: |
-          aws s3 cp deployment.zip s3://my1-codedeploybucket/deployment.zip 
+      # # Upload the ZIP file to S3     change bucket name according to you
+      # - name: Upload ZIP to S3
+      #   if: success()
+      #   run: |
+      #     aws s3 cp deployment.zip s3://my1-codedeploybucket/deployment.zip 
 
-      # Deploy to AWS CodeDeploy using the uploaded ZIP file   change ASG name according to
-      - name: Deploy to AWS CodeDeploy
-        if: success()
-        run: |
-          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws deploy create-deployment \
-            --application-name MyDockerCodeDeploymentApp1 \
-            --deployment-config-name CodeDeployDefault.OneAtATime \
-            --deployment-group-name MyDockerAppASGDeploymentGroup \
-            --s3-location bucket=my1-codedeploybucket,key=deployment.zip,bundleType=zip \
-            --file-exists-behavior OVERWRITE \
-            --region eu-north-1
+      # # Deploy to AWS CodeDeploy using the uploaded ZIP file   change ASG name according to
+      # - name: Deploy to AWS CodeDeploy
+      #   if: success()
+      #   run: |
+      #     aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws deploy create-deployment \
+      #       --application-name MyDockerCodeDeploymentApp1 \
+      #       --deployment-config-name CodeDeployDefault.OneAtATime \
+      #       --deployment-group-name MyDockerAppASGDeploymentGroup \
+      #       --s3-location bucket=my1-codedeploybucket,key=deployment.zip,bundleType=zip \
+      #       --file-exists-behavior OVERWRITE \
+      #       --region eu-north-1
 
 
 
